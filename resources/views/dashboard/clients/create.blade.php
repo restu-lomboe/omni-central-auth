@@ -3,9 +3,9 @@
     <div class="max-w-xl">
         <div class="mb-6">
             <a href="{{ route('omni.dashboard.clients.index') }}"
-               class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-omni-500 transition-colors">
+                class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-omni-500 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
                 Kembali ke OAuth Clients
             </a>
@@ -36,9 +36,8 @@
                         Nama Aplikasi <span class="text-red-500">*</span>
                     </label>
                     <input id="name" type="text" name="name" value="{{ old('name') }}"
-                           placeholder="contoh: Aplikasi HR, CRM, Keuangan..."
-                           required
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm
+                        placeholder="contoh: Aplikasi HR, CRM, Keuangan..." required
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm
                                   focus:outline-none focus:ring-2 focus:ring-omni-500 focus:border-transparent
                                   @error('name') border-red-500 @enderror">
                     <p class="text-xs text-gray-400 mt-1">Nama yang ditampilkan di halaman consent OAuth.</p>
@@ -49,25 +48,25 @@
                         Redirect URI <span class="text-red-500">*</span>
                     </label>
                     <input id="redirect" type="url" name="redirect" value="{{ old('redirect') }}"
-                           placeholder="https://app-anda.com/omni/callback"
-                           required
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono
+                        placeholder="https://app-anda.com/omni/callback" required
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono
                                   focus:outline-none focus:ring-2 focus:ring-omni-500 focus:border-transparent
                                   @error('redirect') border-red-500 @enderror">
                     <p class="text-xs text-gray-400 mt-1">
                         URL callback di aplikasi klien setelah user login.
-                        Jika pakai package ini di client, biasanya: <code class="bg-gray-100 px-1 rounded">https://your-app.com/omni/callback</code>
+                        Jika pakai package ini di client, biasanya: <code
+                            class="bg-gray-100 px-1 rounded">https://your-app.com/omni/callback</code>
                     </p>
                 </div>
 
                 <div class="pt-2 flex gap-3">
                     <button type="submit"
-                            class="bg-omni-500 hover:bg-omni-600 text-white font-medium px-5 py-2.5
+                        class="bg-omni-500 hover:bg-omni-600 text-white font-medium px-5 py-2.5
                                    rounded-lg text-sm transition-colors">
                         Buat Client
                     </button>
                     <a href="{{ route('omni.dashboard.clients.index') }}"
-                       class="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm
+                        class="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm
                               hover:bg-gray-50 transition-colors">
                         Batal
                     </a>

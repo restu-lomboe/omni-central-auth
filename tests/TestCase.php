@@ -49,8 +49,6 @@ abstract class TestCase extends Orchestra
 
     protected function loadMigrationsForTests(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-
         // Users table minimal untuk testing
         $this->app['db']->connection()->getSchemaBuilder()->create('users', function ($table) {
             $table->id();
@@ -67,6 +65,16 @@ abstract class TestCase extends Orchestra
             $table->rememberToken();
             $table->timestamps();
         });
+
+            // 2. Load Passport migrations (oauth_clients, oauth_tokens, dll)
+        $this->loadMigrationsFrom(
+            __DIR__ . '/../../vendor/laravel/passport/database/migrations'
+        );
+
+        // 3. Load hanya audit_logs migration dari package
+        $this->loadMigrationsFrom(
+            __DIR__ . '/../database/migrations/2024_01_01_000001_create_omni_audit_logs_table.php'
+        );
     }
 
     /**

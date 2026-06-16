@@ -8,23 +8,15 @@
     <title>{{ $title ?? 'Admin Dashboard' }} — {{ config('omni-central-auth.server.app_name') }}</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        omni: {
-                            50: '#fff7ed',
-                            100: '#ffedd5',
-                            500: '#FF6B35',
-                            600: '#ea580c',
-                            700: '#c2410c',
-                        }
-                    }
-                }
-            }
+    <style type="text/tailwindcss">
+        @theme {
+            --color-omni-50: #fff7ed;
+            --color-omni-100: #ffedd5;
+            --color-omni-500: #FF6B35;
+            --color-omni-600: #ea580c;
+            --color-omni-700: #c2410c;
         }
-    </script>
+    </style>
     @livewireStyles
 </head>
 
