@@ -114,6 +114,17 @@
                         {{ session('success') }}
                     </div>
                 @endif
+                <div x-data="{ show: false, message: '' }"
+                    x-on:notify.window="
+                        message = $event.detail.message;
+                        show = true;
+                        setTimeout(() => show = false, 3000);
+                    ">
+                    <div x-show="show"
+                        class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">
+                        <span x-text="message"></span>
+                    </div>
+                </div>
 
                 {{ $slot }}
             </div>

@@ -30,8 +30,16 @@ class ClientsTable extends Component
         $client = $this->clients->find($clientId);
         $client->update(['revoked' => true]);
         if ($client) {
-            $this->clients->delete($client);
-            session()->flash('success', 'Client berhasil direvoke.');
+            $this->dispatch('notify', message: 'Client berhasil direvoke.');
+        }
+    }
+
+    public function restoreClient($clientId)
+    {
+        $client = $this->clients->find($clientId);
+        $client->update(['revoked' => false]);
+        if ($client) {
+            $this->dispatch('notify', message: 'Client berhasil direstore.');
         }
     }
 
