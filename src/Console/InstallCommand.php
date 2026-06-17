@@ -5,6 +5,7 @@ namespace DeveloperAwam\OmniCentralAuth\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Passport\ClientRepository;
 
 class InstallCommand extends Command
 {
@@ -35,6 +36,10 @@ class InstallCommand extends Command
         if ($this->confirm('Publish views for customization?', false)) {
             $this->publishViews();
         }
+
+        // Run pending migrations to prevent duplicate errors
+        // when passport:install or createAdminUser runs migrate later
+        $this->runMigrations();
 
         // Mode-specific setup
         match ($mode) {
@@ -82,9 +87,17 @@ class InstallCommand extends Command
 
     protected function publishMigrations(): void
     {
+        // Check if any omni migration already exists
+        $existing = glob(database_path('migrations/*_create_omni_audit_logs_table.php'));
+        
+        if (! empty($existing)) {
+            $this->line('  <fg=green>✔</> Migrations already exist — skipped');
+
+            return;
+        }
+
         $this->callSilently('vendor:publish', [
-            '--tag'   => 'omni-migrations',
-            '--force' => $this->option('force'),
+            '--tag' => 'omni-migrations',
         ]);
         $this->line('  <fg=green>✔</> Migrations published to <fg=cyan>database/migrations/</>');
     }
@@ -103,13 +116,52 @@ class InstallCommand extends Command
         $this->newLine();
         $this->line('  <fg=yellow>SERVER MODE SETUP</>');
 
-        // Install Passport
-        $this->call('passport:install');
-        $this->line('  <fg=green>✔</> Passport keys & clients created');
+        // Generate passport keys (safe to re-run, --force to overwrite)
+        $this->call('passport:keys', ['--force' => $this->option('force')]);
 
-        // Reminder
-        $this->line('  <fg=yellow>!</> Add <fg=cyan>HasApiTokens</> trait to your User model');
-        $this->line('  <fg=yellow>!</> Add <fg=cyan>TwoFactorAuthenticatable</> trait for 2FA');
+        // Publish passport config
+        $this->callSilently('vendor:publish', ['--tag' => 'passport-config', '--force' => $this->option('force')]);
+
+        // Check if passport migrations already exist
+        $passportPublished = ! empty(glob(database_path('migrations/*_create_oauth_auth_codes_table.php')));
+
+        if (! $passportPublished) {
+            $this->callSilently('vendor:publish', ['--tag' => 'passport-migrations']);
+            $this->call('migrate');
+            $this->line('  <fg=green>✔</> Passport migrations created & run');
+        } else {
+            $this->line('  <fg=green>✔</> Passport migrations already exist — skipped');
+        }
+
+        // Create personal access client (skip if already exists)
+        if ($this->confirm('Create a personal access client?', false)) {
+            $this->call('passport:client', ['--personal' => true, '--name' => config('app.name') . ' Personal Access']);
+        }
+
+        $this->line('  <fg=green>✔</> Passport keys & config ready');
+
+        // Create default OAuth client for SSO
+        if ($this->confirm('Create an OAuth client for SSO client apps?', true)) {
+            $name = $this->ask('OAuth client name', config('app.name') . ' SSO Client');
+            $redirect = $this->ask('Redirect URI', 'http://localhost:8000/omni/callback');
+
+            $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient(
+                name: $name,
+                redirectUris: [$redirect],
+                confidential: true,
+            );
+
+            $this->newLine();
+            $this->line('  <fg=green>✔ OAuth client created!</>');
+            $this->line('     Client ID    : <fg=cyan>' . $client->getKey() . '</>');
+            $this->line('     Client Secret: <fg=cyan>' . ($client->plainSecret ?? 'hidden') . '</>');
+            $this->line('');
+            $this->line('  Add these to your client app\'s <fg=cyan>.env</>:');
+            $this->line('       OMNI_CLIENT_ID=' . $client->getKey());
+            $this->line("       OMNI_CLIENT_SECRET={$client->plainSecret}");
+            $this->line('       OMNI_CLIENT_REDIRECT_URI=' . $redirect);
+        }
+
     }
 
     protected function setupClient(): void
@@ -143,6 +195,13 @@ class InstallCommand extends Command
         $this->line("  <fg=green>✔</> .env updated: <fg=cyan>{$key}={$value}</>");
     }
 
+    protected function runMigrations(): void
+    {
+        if ($this->confirm('Run pending database migrations now?', true)) {
+            $this->call('migrate');
+        }
+    }
+
     protected function displayBanner(): void
     {
         $this->newLine();
@@ -165,8 +224,7 @@ class InstallCommand extends Command
             return;
         }
 
-        $this->line('  <fg=yellow>Running migrations first...</>');
-        $this->call('migrate');
+        $this->callSilently('migrate');
 
         $userModel = config('omni-central-auth.user_model');
 
@@ -232,7 +290,7 @@ class InstallCommand extends Command
         $step = $this->adminCreated ? 1 : 2;
 
         if (in_array($mode, ['server', 'both'])) {
-            $this->line("  {$step}. Add traits to User model (see documentation)");
+            $this->line("  {$step}. Add <fg=cyan>HasApiTokens</> & <fg=cyan>TwoFactorAuthenticatable</> traits to User model");
             $this->line('  ' . ($step + 1) . '. Visit <fg=cyan>/omni-dashboard</> to manage OAuth Clients');
         }
 

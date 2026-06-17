@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use DeveloperAwam\OmniCentralAuth\Http\Controllers\Server\AuthorizationController;
 
@@ -10,6 +11,18 @@ use DeveloperAwam\OmniCentralAuth\Http\Controllers\Server\AuthorizationControlle
 // DELETE /oauth/authorize
 // GET  /oauth/tokens
 // dll.
+
+// Endpoint API untuk client app mengambil data user setelah login SSO
+Route::middleware('auth:api')->get('/api/user', function (Request $request) {
+    $user = $request->user();
+
+    return [
+        'id'     => $user->getAuthIdentifier(),
+        'name'   => $user->name,
+        'email'  => $user->email,
+        'avatar' => $user->avatar ?? null,
+    ];
+});
 
 // Route tambahan khusus Omni (opsional, misalnya halaman consent custom)
 Route::group([
