@@ -27,22 +27,10 @@
             return;
         }
 
-        function handleMessage(event) {
-            if (event.data.source !== 'omni_sso') return;
-
-            if (event.data.success) {
-                window.location.reload();
-            } else {
-                window.location.href = '{{ route('omni.login') }}';
-            }
-        }
-
-        window.addEventListener('message', handleMessage);
-
-        const checkClosed = setInterval(function() {
+        var timer = setInterval(function() {
             if (popup.closed) {
-                clearInterval(checkClosed);
-                window.removeEventListener('message', handleMessage);
+                clearInterval(timer);
+                window.location.reload();
             }
         }, 500);
     }
