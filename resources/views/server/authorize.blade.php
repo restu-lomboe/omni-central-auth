@@ -80,6 +80,7 @@
                         <form method="POST" action="{{ route('omni.authorize.approve') }}" class="flex-1">
                             @csrf
                             <input type="hidden" name="auth_token" value="{{ $authToken }}">
+                            <input type="hidden" name="client_id" value="{{ $client->getKey() }}">
                             <button type="submit"
                                     class="w-full px-4 py-2.5 bg-omni-500 hover:bg-omni-600 text-white font-medium
                                            rounded-lg text-sm transition-colors">

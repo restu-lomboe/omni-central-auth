@@ -47,12 +47,10 @@ class CallbackController extends Controller
         $localUser = $userModel::firstOrCreate(
             ['email' => $userData['email']],
             [
-                'name'              => $userData['name'],
-                'email'             => $userData['email'],
-                'password'          => null,
-                'omni_id'           => $userData['id'],
-                'omni_token'        => null,
-                'omni_refresh_token'=> null,
+                'name'     => $userData['name'],
+                'email'    => $userData['email'],
+                'password' => null,
+                'omni_id'  => $userData['omni_id'],
             ]
         );
 
@@ -60,7 +58,7 @@ class CallbackController extends Controller
 
         AuditLog::record('login', [
             'via'      => 'sso',
-            'omni_id'  => $userData['id'],
+            'omni_id'  => $userData['omni_id'],
         ]);
 
         return redirect()->intended(

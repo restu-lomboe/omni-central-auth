@@ -21,8 +21,6 @@ class User extends Authenticatable
         'two_factor_secret',
         'two_factor_recovery_codes',
         'omni_id',
-        'omni_token',
-        'omni_refresh_token',
     ];
 
     protected $hidden = ['password', 'remember_token'];

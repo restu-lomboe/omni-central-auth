@@ -5,20 +5,19 @@ namespace DeveloperAwam\OmniCentralAuth\Http\Controllers\Server;
 use GuzzleHttp\Psr7\Response as PsrResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Client;
 use Laravel\Passport\TokenRepository;
 
 class AuthorizationController extends Controller
 {
     public function __construct(
-        protected ClientRepository $clients,
         protected TokenRepository  $tokens,
     ) {}
 
     public function show(Request $request)
     {
         $clientId = $request->get('client_id');
-        $client   = $this->clients->findActive($clientId);
+        $client   = Client::find($clientId);
 
         if (! $client) {
             abort(400, 'OAuth client not found or inactive.');
@@ -36,7 +35,7 @@ class AuthorizationController extends Controller
     {
         $user = $request->user();
         $clientId = $request->get('client_id');
-        $client = $this->clients->findActive($clientId);
+        $client = Client::find($clientId);
 
         if (! $client) {
             abort(400, 'OAuth client not found or inactive.');
@@ -49,14 +48,31 @@ class AuthorizationController extends Controller
         }
 
         $payload = $this->encryptPayload([
-            'id'        => $user->getAuthIdentifier(),
+            'omni_id'   => $user->getAuthIdentifier(),
             'name'      => $user->name,
             'email'     => $user->email,
             'avatar'    => $user->avatar ?? null,
             'timestamp' => now()->timestamp,
         ], $signingKey);
 
-        $redirectUri = $client->redirect_uri;
+        $raw = $client->getAttributes()['redirect_uris'] ?? null;
+        $redirects = [];
+
+        if ($raw !== null) {
+            $decoded = json_decode($raw, true);
+
+            if (is_array($decoded)) {
+                $redirects = $decoded;
+            } elseif ($decoded !== null && $decoded !== false) {
+                // decoded JSON is a scalar (string/number) — wrap it
+                $redirects = [$decoded];
+            } else {
+                // Fallback: if raw is a plain string (not JSON), use it
+                $redirects = is_string($raw) && $raw !== '' ? [$raw] : [];
+            }
+        }
+
+        $redirectUri = $redirects[0] ?? '';
         $separator = parse_url($redirectUri, PHP_URL_QUERY) ? '&' : '?';
 
         return redirect("{$redirectUri}{$separator}sso_data=" . urlencode($payload));
@@ -103,7 +119,7 @@ class AuthorizationController extends Controller
 
         $data = json_decode($decrypted, true);
 
-        if (! is_array($data) || ! isset($data['id'], $data['name'], $data['email'])) {
+        if (! is_array($data) || ! isset($data['omni_id'], $data['name'], $data['email'])) {
             return null;
         }
 

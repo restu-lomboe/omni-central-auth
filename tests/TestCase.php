@@ -60,8 +60,6 @@ abstract class TestCase extends Orchestra
             $table->text('two_factor_secret')->nullable();
             $table->text('two_factor_recovery_codes')->nullable();
             $table->string('omni_id')->nullable();
-            $table->text('omni_token')->nullable();
-            $table->text('omni_refresh_token')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

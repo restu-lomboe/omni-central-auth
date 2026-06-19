@@ -20,6 +20,8 @@
 
 Built on top of **Laravel Passport** (OAuth2), **Laravel Fortify** (Auth UI), and **Laravel Socialite** (OAuth2 Client).
 
+**Data Push Architecture:** Unlike standard OAuth2 where the client must exchange an authorization code and fetch user data via API, Omni Central Auth uses **encrypted payload push** — after authorization, the SSO Server directly pushes user data to the client's callback URI using AES-256-CBC encryption with a shared signing key. This eliminates two round-trips and simplifies the client integration.
+
 ---
 
 ## Requirements
@@ -52,8 +54,9 @@ The installer will guide you through the following steps:
 4. **Run migrations** — creates all required tables
 5. **Passport setup** _(server mode only)_ — generates encryption keys and creates:
     - Personal Access Client
-    - Password Grant Client
-6. **`.env` updated** — `OMNI_AUTH_MODE` is set automatically
+    - SSO Client for client apps
+6. **Signing key generation** _(server mode only)_ — `OMNI_CENTRAL_SIGNING_KEY` auto-generated
+7. **`.env` updated** — `OMNI_AUTH_MODE` is set automatically
 
 ---
 
@@ -110,7 +113,9 @@ Go to `/omni-dashboard/clients/create` and fill in:
 
 > Do **not** use Client ID `1` or `2` — those are created automatically by Passport for internal use and do not support Authorization Code flow.
 
-After creating, copy the **Client ID** and **Client Secret** — you will need them in the client app.
+After creating, copy the **Client ID**, **Client Secret**, and **SSO Signing Key** — you will need them in the client app.
+
+> The **SSO Signing Key** (`OMNI_CENTRAL_SIGNING_KEY`) is auto-generated during `php artisan omni:install` and saved to `.env`. It is used to encrypt user data payloads sent to client apps. Client apps must use the **exact same key** to decrypt.
 
 ---
 
@@ -145,17 +150,11 @@ In `config/fortify.php`:
 'views' => false,
 ```
 
-### 4. Register the Socialite OAuth driver
+### 4. Socialite driver (automatic)
 
-Add to `config/services.php`:
+The package automatically registers the `omni` Socialite OAuth2 driver from your `.env` configuration. No manual setup in `config/services.php` is required — the `ClientMode` bootstrapper reads credentials directly from `config('omni-central-auth.client.*')`.
 
-```php
-'omni' => [
-    'client_id'     => env('OMNI_CLIENT_ID'),
-    'client_secret' => env('OMNI_CLIENT_SECRET'),
-    'redirect'      => env('OMNI_CLIENT_REDIRECT_URI'),
-],
-```
+> The Socialite driver is only used for the **redirect** step to the SSO Server. The callback no longer uses Socialite — user data is received via encrypted payload.
 
 ### 5. Set credentials in `.env`
 
@@ -165,9 +164,11 @@ OMNI_CLIENT_SERVER_URL=http://your-sso-server.com
 OMNI_CLIENT_ID=3
 OMNI_CLIENT_SECRET=your-client-secret
 OMNI_CLIENT_REDIRECT_URI=http://your-client-app.com/omni/callback
+OMNI_CENTRAL_SIGNING_KEY=copy-from-server
 ```
 
 > `OMNI_CLIENT_REDIRECT_URI` must be a **full URL** and must match exactly what is registered in the SSO server dashboard.
+> `OMNI_CENTRAL_SIGNING_KEY` must be **identical** on both server and client — it is used to encrypt (server) and decrypt (client) the user data payload.
 
 ### 6. Add the login button to your view
 
@@ -193,33 +194,49 @@ OMNI_CLIENT_HOME=/dashboard
 
 ## SSO Flow
 
+### Direct Push Architecture
+
+Unlike standard OAuth2 (which requires the client to exchange an authorization code for a token, then fetch user data via API), Omni Central Auth uses **encrypted payload push**:
+
 ```
 [Client App]
      │
      │  User clicks "Login with Central Account"
      ▼
-GET /omni/login
+GET /omni/login (Socialite redirect)
      │
      │  Redirect to SSO Server
      ▼
 [SSO Server] /oauth/authorize
      │
-     │  User logs in (if not already)
+     │  User logs in via Fortify (if not already)
      │  User sees consent page → clicks Authorize
      ▼
-[SSO Server] issues authorization code
+[SSO Server] encrypts user data with AES-256-CBC
+     │  using the shared OMNI_CENTRAL_SIGNING_KEY
+      │  Payload: { omni_id, name, email, avatar, timestamp }
      │
-     │  Redirect back to client app
+     │  Redirect with encrypted payload
      ▼
-[Client App] /omni/callback
+[Client App] /omni/callback?sso_data=ENCRYPTED_PAYLOAD
      │
-     │  Exchange code for access token
-     │  Fetch user data from SSO Server /api/user
-     │  Auto-create or update local user
+     │  Decrypt payload using shared signing key
+     │  Validate payload integrity
+     │  Auto-create or update local user (firstOrCreate)
      │  Log user in
      ▼
 Redirect to OMNI_CLIENT_HOME
 ```
+
+### Benefits over Standard OAuth2
+
+| Aspect | Standard OAuth2 | Omni Direct Push |
+|--------|----------------|------------------|
+| Round-trips after redirect | 3 (exchange code → get token → fetch user) | 0 (data included in redirect) |
+| API endpoint required on server | `/api/user` | None (optional) |
+| Access token management | Required (token storage, refresh) | None |
+| Works without `/api/user` | No | Yes |
+| Security | OAuth2 state + authorization code | AES-256-CBC encrypted payload |
 
 ---
 
@@ -234,6 +251,46 @@ Available at `/omni-dashboard` (configurable via `config/omni-central-auth.php`)
 | **Audit Log**     | Monitor login, logout, and token activity                      |
 
 > Only users with `is_admin = true` or `role = admin` can access the dashboard. The first registered user on a server app is automatically granted admin access.
+
+---
+
+## Encryption Mechanism
+
+User data is encrypted on the server and decrypted on the client using **AES-256-CBC** with a shared signing key.
+
+### Server (encrypt)
+
+```php
+use DeveloperAwam\OmniCentralAuth\Http\Controllers\Server\AuthorizationController;
+
+$payload = AuthorizationController::encryptPayload([
+    'omni_id' => $user->id,
+    'name'    => $user->name,
+    'email'   => $user->email,
+], $signingKey);
+```
+
+### Client (decrypt)
+
+```php
+use DeveloperAwam\OmniCentralAuth\Http\Controllers\Server\AuthorizationController;
+
+$userData = AuthorizationController::decryptPayload($ssoData, $signingKey);
+// Returns: ['omni_id' => 1, 'name' => '...', 'email' => '...', 'avatar' => null, 'timestamp' => 1234567890]
+// Returns: null if payload is invalid or tampered
+```
+
+### Security details
+
+| Aspect | Implementation |
+|--------|---------------|
+| Algorithm | AES-256-CBC |
+| Key derivation | SHA-256 of `OMNI_CENTRAL_SIGNING_KEY`, truncated to 32 bytes |
+| IV | Random 16 bytes per payload |
+| Transport | Base64-encoded URL parameter `?sso_data=...` |
+| Integrity | Decryption fails on any modification — tampered payload returns `null` |
+
+> The signing key must be **identical** on both server and client. Use `php artisan omni:install` on the server to auto-generate it.
 
 ---
 
@@ -267,7 +324,8 @@ See [`config/omni-central-auth.php`](config/omni-central-auth.php) for all avail
 ## Roadmap
 
 - [x] v1.0 — SSO Server + Client + Admin Dashboard
-- [ ] v1.1 — Passkeys / WebAuthn support
+- [x] v1.1 — Direct Push (encrypted payload, no code exchange)
+- [ ] v1.2 — Passkeys / WebAuthn support
 - [ ] v1.2 — Multi-tenancy / Organization
 - [ ] v2.0 — SAML 2.0 support
 
