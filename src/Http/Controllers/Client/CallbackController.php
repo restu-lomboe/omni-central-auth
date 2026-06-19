@@ -11,17 +11,11 @@ class CallbackController extends Controller
 {
     /**
      * Handle callback dari SSO Server — data user langsung dari encrypted payload.
+     *
+     * Semua callback me-render popup-callback view. View-nya auto-detect:
+     * - Popup → postMessage ke parent window + close
+     * - Full page → redirect ke OMNI_CLIENT_HOME
      */
-    protected function isPopup(Request $request): bool
-    {
-        return $request->session()->pull('omni_login_popup', false);
-    }
-
-    protected function popupResponse(bool $success)
-    {
-        return view('omni::auth.popup-callback', ['success' => $success]);
-    }
-
     public function handle(Request $request)
     {
         $ssoData = $request->query('sso_data');
@@ -29,12 +23,10 @@ class CallbackController extends Controller
         if (! $ssoData) {
             AuditLog::record('login_failed', ['reason' => 'Missing sso_data parameter']);
 
-            if ($this->isPopup($request)) {
-                return $this->popupResponse(false);
-            }
-
-            return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
-                ->withErrors(['sso' => 'Login SSO gagal. Data tidak ditemukan.']);
+            return view('omni::auth.popup-callback', [
+                'success'  => false,
+                'home_url' => config('omni-central-auth.client.server_url') . '/login',
+            ]);
         }
 
         $signingKey = config('omni-central-auth.client.signing_key');
@@ -42,12 +34,10 @@ class CallbackController extends Controller
         if (! $signingKey) {
             AuditLog::record('login_failed', ['reason' => 'Signing key not configured']);
 
-            if ($this->isPopup($request)) {
-                return $this->popupResponse(false);
-            }
-
-            return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
-                ->withErrors(['sso' => 'Konfigurasi signing key tidak ditemukan.']);
+            return view('omni::auth.popup-callback', [
+                'success'  => false,
+                'home_url' => config('omni-central-auth.client.server_url') . '/login',
+            ]);
         }
 
         $userData = AuthorizationController::decryptPayload($ssoData, $signingKey);
@@ -55,12 +45,10 @@ class CallbackController extends Controller
         if (! $userData) {
             AuditLog::record('login_failed', ['reason' => 'Invalid or tampered payload']);
 
-            if ($this->isPopup($request)) {
-                return $this->popupResponse(false);
-            }
-
-            return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
-                ->withErrors(['sso' => 'Data login tidak valid. Silakan coba lagi.']);
+            return view('omni::auth.popup-callback', [
+                'success'  => false,
+                'home_url' => config('omni-central-auth.client.server_url') . '/login',
+            ]);
         }
 
         $userModel = config('omni-central-auth.user_model');
@@ -83,12 +71,9 @@ class CallbackController extends Controller
             'omni_id'  => $userData['omni_id'],
         ]);
 
-        if ($this->isPopup($request)) {
-            return $this->popupResponse(true);
-        }
-
-        return redirect()->intended(
-            config('omni-central-auth.client.home_url', '/dashboard')
-        );
+        return view('omni::auth.popup-callback', [
+            'success'  => true,
+            'home_url' => config('omni-central-auth.client.home_url', '/dashboard'),
+        ]);
     }
 }
