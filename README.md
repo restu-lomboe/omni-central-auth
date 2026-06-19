@@ -206,7 +206,7 @@ OMNI_CLIENT_HOME=/dashboard
 
 ### Popup Login (Default)
 
-The login button opens a **popup window** (similar to Google SSO), eliminating full-page redirects:
+The login button opens a **popup window** (similar to Google SSO). After authorization, the server directly sends user data to the parent window via `postMessage` — no redirect back to client callback:
 
 ```
 [Client App]                  [Popup Window]              [SSO Server]
@@ -214,7 +214,7 @@ The login button opens a **popup window** (similar to Google SSO), eliminating f
      │  Click "Login"               │                         │
      │──opens popup────────────────▶│                         │
      │                              │──GET /omni/login───────▶│
-     │                              │  (redirect)             │
+     │                              │  (Socialite redirect)   │
      │                              │◀────/oauth/authorize────│
      │                              │                         │
      │                              │  User logs in           │
@@ -223,12 +223,12 @@ The login button opens a **popup window** (similar to Google SSO), eliminating f
      │                              │────────POST /approve───▶│
      │                              │                         │
      │                              │  Encrypt user data      │
-     │                              │◀──redirect sso_data────│
-     │                              │                         │
-     │                              │  Decrypt + login        │
-     │                              │  postMessage(success)   │
+     │                              │◀───approved view────────│
+     │                              │  postMessage(sso_data)  │
      │◀──popup closes──────────────│                         │
      │                              │                         │
+     │  fetch POST /callback/ajax   │                         │
+     │  Decrypt + login user        │                         │
      │  window.location.reload()    │                         │
      ▼                                                       ▼
 User logged in
@@ -241,32 +241,26 @@ Unlike standard OAuth2 (which requires the client to exchange an authorization c
 ```
 [Client App]
      │
-     │  User clicks "Login with Central Account"
+     │  Click "Login" button
      ▼
-GET /omni/login (Socialite redirect, ?popup=1 for popup mode)
+Open popup → GET /omni/login → redirect to SSO Server
      │
-     │  Redirect to SSO Server
+[SSO Server] User logs in & authorizes
+     │
+     │  Encrypt user data: { omni_id, name, email, avatar, timestamp }
+     │  Return approved view with postMessage
      ▼
-[SSO Server] /oauth/authorize
+[Popup] postMessage({sso_data: ENCRYPTED}) → parent window → popup close
      │
-     │  User logs in via Fortify (if not already)
-     │  User sees consent page → clicks Authorize
+[Client App] Parent receives postMessage
+     │
+     │  fetch POST /omni/callback/ajax with sso_data
      ▼
-[SSO Server] encrypts user data with AES-256-CBC
-     │  using the shared OMNI_CENTRAL_SIGNING_KEY
-     │  Payload: { omni_id, name, email, avatar, timestamp }
+[Client App] Decrypt payload → firstOrCreate user → auth()->login()
      │
-     │  Redirect with encrypted payload
+     │  window.location.reload()
      ▼
-[Client App] /omni/callback?sso_data=ENCRYPTED_PAYLOAD
-     │
-     │  Decrypt payload using shared signing key
-     │  Validate payload integrity
-     │  Auto-create or update local user (firstOrCreate)
-     │  Log user in
-     │
-     ├── If popup → postMessage to parent + close popup
-     └── If redirect → redirect to OMNI_CLIENT_HOME
+User logged in
 ```
 
 ### Benefits over Standard OAuth2

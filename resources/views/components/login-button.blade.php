@@ -27,10 +27,35 @@
             return;
         }
 
+        function handleMessage(event) {
+            if (event.data && event.data.source === 'omni_sso' && event.data.sso_data) {
+                window.removeEventListener('message', handleMessage);
+                fetch('{{ route('omni.callback.ajax') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    },
+                    body: JSON.stringify({ sso_data: event.data.sso_data }),
+                }).then(function (r) { return r.json(); })
+                  .then(function (data) {
+                      if (data.success) {
+                          window.location.reload();
+                      } else {
+                          window.location.href = '{{ route('omni.login') }}';
+                      }
+                  }).catch(function () {
+                      window.location.href = '{{ route('omni.login') }}';
+                  });
+            }
+        }
+
+        window.addEventListener('message', handleMessage);
+
         var timer = setInterval(function() {
             if (popup.closed) {
                 clearInterval(timer);
-                window.location.reload();
+                window.removeEventListener('message', handleMessage);
             }
         }, 500);
     }

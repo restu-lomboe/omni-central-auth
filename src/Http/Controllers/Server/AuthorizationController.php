@@ -73,9 +73,13 @@ class AuthorizationController extends Controller
         }
 
         $redirectUri = $redirects[0] ?? '';
-        $separator = parse_url($redirectUri, PHP_URL_QUERY) ? '&' : '?';
+        $parts = parse_url($redirectUri);
+        $clientOrigin = ($parts['scheme'] ?? 'http') . '://' . ($parts['host'] ?? 'localhost');
 
-        return redirect("{$redirectUri}{$separator}sso_data=" . urlencode($payload));
+        return view('omni::server.approved', [
+            'sso_data'      => $payload,
+            'client_origin' => $clientOrigin,
+        ]);
     }
 
     public function deny(Request $request)
