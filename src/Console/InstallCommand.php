@@ -5,6 +5,7 @@ namespace DeveloperAwam\OmniCentralAuth\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Laravel\Passport\ClientRepository;
 
 class InstallCommand extends Command
@@ -138,7 +139,15 @@ class InstallCommand extends Command
             $this->call('passport:client', ['--personal' => true, '--name' => config('app.name') . ' Personal Access']);
         }
 
+        // Generate SSO signing key
+        $signingKey = Str::random(64);
+        $this->setEnvVariable('OMNI_CENTRAL_SIGNING_KEY', $signingKey);
+
         $this->line('  <fg=green>✔</> Passport keys & config ready');
+        $this->newLine();
+        $this->line('  <fg=green>✔ SSO Signing Key generated!</>');
+        $this->line('     <fg=cyan>' . $signingKey . '</>');
+        $this->line('  (auto-saved to .env as OMNI_CENTRAL_SIGNING_KEY)');
 
         // Create default OAuth client for SSO
         if ($this->confirm('Create an OAuth client for SSO client apps?', true)) {
@@ -160,6 +169,7 @@ class InstallCommand extends Command
             $this->line('       OMNI_CLIENT_ID=' . $client->getKey());
             $this->line("       OMNI_CLIENT_SECRET={$client->plainSecret}");
             $this->line('       OMNI_CLIENT_REDIRECT_URI=' . $redirect);
+            $this->line('       OMNI_CENTRAL_SIGNING_KEY=' . $signingKey);
         }
 
     }
@@ -173,6 +183,7 @@ class InstallCommand extends Command
         $this->line('       OMNI_CLIENT_SERVER_URL=https://your-sso-server.com');
         $this->line('       OMNI_CLIENT_ID=your-client-id');
         $this->line('       OMNI_CLIENT_SECRET=your-client-secret');
+        $this->line('       OMNI_CENTRAL_SIGNING_KEY=copy-from-server');
     }
 
     protected function setEnvVariable(string $key, string $value): void
@@ -295,7 +306,7 @@ class InstallCommand extends Command
         }
 
         if (in_array($mode, ['client', 'both'])) {
-            $this->line("  {$step}. Fill in client credentials in <fg=cyan>.env</>");
+            $this->line("  {$step}. Fill in client credentials in <fg=cyan>.env</> (including OMNI_CENTRAL_SIGNING_KEY)");
             $this->line('  ' . ($step + 1) . '. Add login button: <fg=cyan>@include(\'omni::components.login-button\')</>');
         }
 
