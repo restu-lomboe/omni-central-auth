@@ -12,8 +12,12 @@ class LoginController extends Controller
     /**
      * Redirect user ke SSO Server untuk login.
      */
-    public function redirect()
+    public function redirect(Request $request)
     {
+        if ($request->query('popup')) {
+            $request->session()->flash('omni_login_popup', true);
+        }
+
         return Socialite::driver('omni')->redirect();
     }
 

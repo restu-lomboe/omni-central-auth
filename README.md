@@ -172,15 +172,25 @@ OMNI_CENTRAL_SIGNING_KEY=copy-from-server
 
 ### 6. Add the login button to your view
 
+The package includes a ready-to-use SSO login button that opens a **popup window** (similar to Google SSO):
+
 ```blade
 @include('omni::components.login-button')
 ```
 
-Or manually:
+The popup flow:
+1. Clicking the button opens a centered popup to the SSO Server
+2. User logs in and authorizes in the popup
+3. On success, the popup closes automatically via `postMessage`
+4. The parent page reloads with the user logged in
+
+For a direct redirect (no popup), use the route manually:
 
 ```blade
 <a href="{{ route('omni.login') }}">Login with Central Account</a>
 ```
+
+> **No-JavaScript fallback:** The login button component includes a `<noscript>` fallback that uses a regular redirect.
 
 ### 7. Customize redirect after login
 
@@ -194,6 +204,36 @@ OMNI_CLIENT_HOME=/dashboard
 
 ## SSO Flow
 
+### Popup Login (Default)
+
+The login button opens a **popup window** (similar to Google SSO), eliminating full-page redirects:
+
+```
+[Client App]                  [Popup Window]              [SSO Server]
+     │                              │                         │
+     │  Click "Login"               │                         │
+     │──opens popup────────────────▶│                         │
+     │                              │──GET /omni/login───────▶│
+     │                              │  (redirect)             │
+     │                              │◀────/oauth/authorize────│
+     │                              │                         │
+     │                              │  User logs in           │
+     │                              │  User sees consent      │
+     │                              │  Clicks Authorize       │
+     │                              │────────POST /approve───▶│
+     │                              │                         │
+     │                              │  Encrypt user data      │
+     │                              │◀──redirect sso_data────│
+     │                              │                         │
+     │                              │  Decrypt + login        │
+     │                              │  postMessage(success)   │
+     │◀──popup closes──────────────│                         │
+     │                              │                         │
+     │  window.location.reload()    │                         │
+     ▼                                                       ▼
+User logged in
+```
+
 ### Direct Push Architecture
 
 Unlike standard OAuth2 (which requires the client to exchange an authorization code for a token, then fetch user data via API), Omni Central Auth uses **encrypted payload push**:
@@ -203,7 +243,7 @@ Unlike standard OAuth2 (which requires the client to exchange an authorization c
      │
      │  User clicks "Login with Central Account"
      ▼
-GET /omni/login (Socialite redirect)
+GET /omni/login (Socialite redirect, ?popup=1 for popup mode)
      │
      │  Redirect to SSO Server
      ▼
@@ -214,7 +254,7 @@ GET /omni/login (Socialite redirect)
      ▼
 [SSO Server] encrypts user data with AES-256-CBC
      │  using the shared OMNI_CENTRAL_SIGNING_KEY
-      │  Payload: { omni_id, name, email, avatar, timestamp }
+     │  Payload: { omni_id, name, email, avatar, timestamp }
      │
      │  Redirect with encrypted payload
      ▼
@@ -224,8 +264,9 @@ GET /omni/login (Socialite redirect)
      │  Validate payload integrity
      │  Auto-create or update local user (firstOrCreate)
      │  Log user in
-     ▼
-Redirect to OMNI_CLIENT_HOME
+     │
+     ├── If popup → postMessage to parent + close popup
+     └── If redirect → redirect to OMNI_CLIENT_HOME
 ```
 
 ### Benefits over Standard OAuth2
