@@ -28,25 +28,9 @@
         }
 
         function handleMessage(event) {
-            if (event.data && event.data.source === 'omni_sso' && event.data.sso_data) {
+            if (event.data && event.data.source === 'omni_sso' && event.data.redirect_url) {
                 window.removeEventListener('message', handleMessage);
-                fetch('{{ route('omni.callback.ajax') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    },
-                    body: JSON.stringify({ sso_data: event.data.sso_data }),
-                }).then(function (r) { return r.json(); })
-                  .then(function (data) {
-                      if (data.success) {
-                          window.location.reload();
-                      } else {
-                          window.location.href = '{{ route('omni.login') }}';
-                      }
-                  }).catch(function () {
-                      window.location.href = '{{ route('omni.login') }}';
-                  });
+                window.location.href = event.data.redirect_url;
             }
         }
 

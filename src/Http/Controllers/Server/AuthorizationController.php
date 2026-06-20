@@ -73,12 +73,10 @@ class AuthorizationController extends Controller
         }
 
         $redirectUri = $redirects[0] ?? '';
-        $parts = parse_url($redirectUri);
-        $clientOrigin = ($parts['scheme'] ?? 'http') . '://' . ($parts['host'] ?? 'localhost');
 
         return view('omni::server.approved', [
-            'sso_data'      => $payload,
-            'client_origin' => $clientOrigin,
+            'sso_data'       => $payload,
+            'callback_url'   => $redirectUri,
         ]);
     }
 

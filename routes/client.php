@@ -14,9 +14,6 @@ Route::group([
     // Callback setelah user authorize di SSO Server
     Route::get('/callback', [CallbackController::class, 'handle'])->name('omni.callback');
 
-    // AJAX callback — popup mengirim sso_data via postMessage, client fetch ke sini
-    Route::post('/callback/ajax', [CallbackController::class, 'handleAjax'])->name('omni.callback.ajax');
-
     // Logout (revoke token lokal, redirect ke SSO Server logout)
     Route::post('/logout', [LoginController::class, 'logout'])->name('omni.logout');
 });

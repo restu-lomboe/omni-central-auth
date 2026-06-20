@@ -10,17 +10,19 @@
     </p>
 
     <script>
-        var ssoData = @json($sso_data);
-        var origin  = @json($client_origin);
+        var ssoData      = @json($sso_data);
+        var callbackUrl  = @json($callback_url);
+        var sep          = callbackUrl.indexOf('?') === -1 ? '?' : '&';
+        var redirectTo   = callbackUrl + sep + 'sso_data=' + encodeURIComponent(ssoData);
 
         if (window.opener) {
             window.opener.postMessage({
-                source:   'omni_sso',
-                sso_data: ssoData,
-            }, origin);
+                source:       'omni_sso',
+                redirect_url: redirectTo,
+            }, '*');
             window.close();
         } else {
-            window.location.href = origin + '/omni/callback?sso_data=' + encodeURIComponent(ssoData);
+            window.location.href = redirectTo;
         }
     </script>
 </body>

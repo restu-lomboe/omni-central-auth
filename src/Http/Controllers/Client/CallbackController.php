@@ -20,42 +20,13 @@ class CallbackController extends Controller
                 ->withErrors(['sso' => 'Login SSO gagal. Data tidak ditemukan.']);
         }
 
-        $result = $this->processSsoData($ssoData);
-
-        if (! $result['success']) {
-            return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
-                ->withErrors(['sso' => $result['message']]);
-        }
-
-        return redirect()->intended(
-            config('omni-central-auth.client.home_url', '/dashboard')
-        );
-    }
-
-    public function handleAjax(Request $request)
-    {
-        $ssoData = $request->input('sso_data');
-
-        if (! $ssoData) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Missing sso_data',
-            ], 400);
-        }
-
-        $result = $this->processSsoData($ssoData);
-
-        return response()->json($result, $result['success'] ? 200 : 400);
-    }
-
-    protected function processSsoData(string $ssoData): array
-    {
         $signingKey = config('omni-central-auth.client.signing_key');
 
         if (! $signingKey) {
             AuditLog::record('login_failed', ['reason' => 'Signing key not configured']);
 
-            return ['success' => false, 'message' => 'Signing key not configured'];
+            return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
+                ->withErrors(['sso' => 'Konfigurasi signing key tidak ditemukan.']);
         }
 
         $userData = AuthorizationController::decryptPayload($ssoData, $signingKey);
@@ -63,7 +34,8 @@ class CallbackController extends Controller
         if (! $userData) {
             AuditLog::record('login_failed', ['reason' => 'Invalid or tampered payload']);
 
-            return ['success' => false, 'message' => 'Invalid or tampered payload'];
+            return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
+                ->withErrors(['sso' => 'Data login tidak valid. Silakan coba lagi.']);
         }
 
         $userModel = config('omni-central-auth.user_model');
@@ -85,6 +57,8 @@ class CallbackController extends Controller
             'omni_id' => $userData['omni_id'],
         ]);
 
-        return ['success' => true, 'message' => 'Login successful'];
+        return redirect()->intended(
+            config('omni-central-auth.client.home_url', '/dashboard')
+        );
     }
 }
