@@ -28,9 +28,13 @@
         }
 
         function handleMessage(event) {
-            if (event.data && event.data.source === 'omni_sso' && event.data.redirect_url) {
+            if (event.data && event.data.source === 'omni_sso') {
                 window.removeEventListener('message', handleMessage);
-                window.location.href = event.data.redirect_url;
+                if (event.data.redirect_url) {
+                    window.location.href = event.data.redirect_url;
+                } else if (event.data.denied) {
+                    window.location.href = '{{ route('omni.login') }}';
+                }
             }
         }
 

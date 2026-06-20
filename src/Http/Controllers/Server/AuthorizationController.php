@@ -2,7 +2,6 @@
 
 namespace DeveloperAwam\OmniCentralAuth\Http\Controllers\Server;
 
-use GuzzleHttp\Psr7\Response as PsrResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Laravel\Passport\Client;
@@ -82,8 +81,7 @@ class AuthorizationController extends Controller
 
     public function deny(Request $request)
     {
-        return app(\Laravel\Passport\Http\Controllers\DenyAuthorizationController::class)
-            ->deny($request, new PsrResponse);
+        return view('omni::server.denied');
     }
 
     public static function encryptPayload(array $data, string $key): string
