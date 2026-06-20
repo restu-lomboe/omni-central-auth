@@ -30,7 +30,7 @@ class OmniAdminMiddleware
         };
 
         if (! $hasAdminAccess) {
-            abort(403, 'Akses ditolak. Anda bukan admin Omni Central Auth.');
+            abort(403, 'Access denied. You are not an Omni Central Auth admin.');
         }
 
         return $next($request);

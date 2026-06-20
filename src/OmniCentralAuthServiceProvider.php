@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use DeveloperAwam\OmniCentralAuth\Console\InstallCommand;
 use DeveloperAwam\OmniCentralAuth\Http\Middleware\OmniAdminMiddleware;
+use DeveloperAwam\OmniCentralAuth\Http\Middleware\OmniUserMiddleware;
 use DeveloperAwam\OmniCentralAuth\Modes\ServerMode;
 use DeveloperAwam\OmniCentralAuth\Modes\ClientMode;
 
@@ -15,7 +16,7 @@ class OmniCentralAuthServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Merge config — user hanya perlu override yang ingin diubah
+        // Merge config — users only need to override what they want
         $this->mergeConfigFrom(
             __DIR__ . '/../config/omni-central-auth.php',
             'omni-central-auth'
@@ -60,6 +61,7 @@ class OmniCentralAuthServiceProvider extends ServiceProvider
         /** @var Router $router */
         $router = $this->app['router'];
         $router->aliasMiddleware('omni.admin', OmniAdminMiddleware::class);
+        $router->aliasMiddleware('omni.user', OmniUserMiddleware::class);
     }
 
     protected function registerRoutes(): void
@@ -81,14 +83,14 @@ class OmniCentralAuthServiceProvider extends ServiceProvider
 
     protected function registerViews(): void
     {
-        // Laravel 13: dua lokasi — vendor override dulu, lalu package default
+        // Laravel 13: two locations — vendor override first, then package default
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'omni');
     }
 
     protected function registerMigrations(): void
     {
         if (config('omni-central-auth.load_migrations', true)) {
-            // Laravel 13: publishesMigrations otomatis update timestamp saat publish
+            // Laravel 13: publishesMigrations automatically updates timestamp on publish
             $this->publishesMigrations([
                 __DIR__ . '/../database/migrations' => database_path('migrations'),
             ], 'omni-migrations');
@@ -124,7 +126,7 @@ class OmniCentralAuthServiceProvider extends ServiceProvider
 
     protected function registerAboutCommand(): void
     {
-        // Muncul saat developer jalankan `php artisan about`
+        // Shows when developer runs `php artisan about`
         AboutCommand::add('Omni Central Auth', fn () => [
             'Version' => '1.0.0',
             'Mode'    => config('omni-central-auth.mode'),
@@ -138,7 +140,7 @@ class OmniCentralAuthServiceProvider extends ServiceProvider
             InstallCommand::class,
         ]);
 
-        // Daftarkan ke optimize agar config di-cache saat `php artisan optimize`
+        // Register with optimize to cache config when running `php artisan optimize`
         // $this->optimizes(
         //     optimize: 'omni:optimize',
         //     clear: 'omni:clear',
@@ -162,7 +164,7 @@ class OmniCentralAuthServiceProvider extends ServiceProvider
             __DIR__ . '/../lang' => $this->app->langPath('vendor/omni'),
         ], 'omni-lang');
 
-        // Semua sekaligus
+        // All at once
         $this->publishes([
             __DIR__ . '/../config/omni-central-auth.php' => config_path('omni-central-auth.php'),
             __DIR__ . '/../resources/views'              => resource_path('views/vendor/omni'),

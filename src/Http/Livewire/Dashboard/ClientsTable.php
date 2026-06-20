@@ -30,7 +30,7 @@ class ClientsTable extends Component
         $client = $this->clients->find($clientId);
         $client->update(['revoked' => true]);
         if ($client) {
-            $this->dispatch('notify', message: 'Client berhasil direvoke.');
+            $this->dispatch('notify', message: 'Client revoked successfully.');
         }
     }
 
@@ -39,7 +39,7 @@ class ClientsTable extends Component
         $client = $this->clients->find($clientId);
         $client->update(['revoked' => false]);
         if ($client) {
-            $this->dispatch('notify', message: 'Client berhasil direstore.');
+            $this->dispatch('notify', message: 'Client restored successfully.');
         }
     }
 

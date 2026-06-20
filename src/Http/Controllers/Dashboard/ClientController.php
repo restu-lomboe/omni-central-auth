@@ -75,6 +75,6 @@ class ClientController extends Controller
         $client->update(['revoked' => true]);
 
         return redirect()->route('omni.dashboard.clients.index')
-            ->with('success', 'Client berhasil dihapus.');
+            ->with('success', 'Client deleted successfully.');
     }
 }

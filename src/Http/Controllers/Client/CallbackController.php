@@ -17,7 +17,7 @@ class CallbackController extends Controller
             AuditLog::record('login_failed', ['reason' => 'Missing sso_data parameter']);
 
             return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
-                ->withErrors(['sso' => 'Login SSO gagal. Data tidak ditemukan.']);
+                ->withErrors(['sso' => 'SSO login failed. Data not found.']);
         }
 
         $signingKey = config('omni-central-auth.client.signing_key');
@@ -26,7 +26,7 @@ class CallbackController extends Controller
             AuditLog::record('login_failed', ['reason' => 'Signing key not configured']);
 
             return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
-                ->withErrors(['sso' => 'Konfigurasi signing key tidak ditemukan.']);
+                ->withErrors(['sso' => 'Signing key configuration not found.']);
         }
 
         $userData = AuthorizationController::decryptPayload($ssoData, $signingKey);
@@ -35,7 +35,7 @@ class CallbackController extends Controller
             AuditLog::record('login_failed', ['reason' => 'Invalid or tampered payload']);
 
             return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
-                ->withErrors(['sso' => 'Data login tidak valid. Silakan coba lagi.']);
+                ->withErrors(['sso' => 'Invalid login data. Please try again.']);
         }
 
         $userModel = config('omni-central-auth.user_model');

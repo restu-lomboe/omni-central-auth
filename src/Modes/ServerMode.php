@@ -7,6 +7,7 @@ use Laravel\Passport\Passport;
 use DeveloperAwam\OmniCentralAuth\Actions\CreateNewUser;
 use DeveloperAwam\OmniCentralAuth\Actions\ResetUserPassword;
 use DeveloperAwam\OmniCentralAuth\Actions\UpdateUserPassword;
+use DeveloperAwam\OmniCentralAuth\Actions\UpdateUserProfileInformation;
 
 class ServerMode
 {
@@ -45,5 +46,46 @@ class ServerMode
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
+        Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
+
+        $this->registerRedirectResponses();
+    }
+
+    protected function registerRedirectResponses(): void
+    {
+        $redirect = function ($request) {
+            $user = $request->user();
+
+            $isAdmin = match (true) {
+                method_exists($user, 'isOmniAdmin') => $user->isOmniAdmin(),
+                isset($user->is_admin)              => (bool) $user->is_admin,
+                isset($user->role)                  => in_array($user->role, ['admin', 'super_admin']),
+                default                             => false,
+            };
+
+            $prefix = config('omni-central-auth.dashboard.prefix', 'omni-dashboard');
+
+            return redirect($isAdmin ? "/{$prefix}" : '/user');
+        };
+
+        app()->singleton(\Laravel\Fortify\Contracts\LoginResponse::class, function () use ($redirect) {
+            return new class($redirect) implements \Laravel\Fortify\Contracts\LoginResponse {
+                public function __construct(private $redirect) {}
+                public function toResponse($request): \Symfony\Component\HttpFoundation\Response
+                {
+                    return ($this->redirect)($request);
+                }
+            };
+        });
+
+        app()->singleton(\Laravel\Fortify\Contracts\RegisterResponse::class, function () use ($redirect) {
+            return new class($redirect) implements \Laravel\Fortify\Contracts\RegisterResponse {
+                public function __construct(private $redirect) {}
+                public function toResponse($request): \Symfony\Component\HttpFoundation\Response
+                {
+                    return ($this->redirect)($request);
+                }
+            };
+        });
     }
 }

@@ -6,7 +6,7 @@
 </head>
 <body>
     <p style="text-align:center;padding-top:40vh;font-family:sans-serif;color:#666;font-size:14px;">
-        Authorized — menutup jendela...
+        Authorized — closing window...
     </p>
 
     <script>

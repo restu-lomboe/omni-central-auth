@@ -26,12 +26,12 @@ class UserController extends Controller
 
         // Cegah admin mengubah role dirinya sendiri
         if ($user->id === auth()->id()) {
-            return back()->withErrors(['role' => 'Tidak bisa mengubah role sendiri.']);
+            return back()->withErrors(['role' => 'Cannot change your own role.']);
         }
 
         $user->update(['role' => $request->role]);
 
-        return back()->with('success', "Role {$user->name} diperbarui menjadi {$request->role}.");
+        return back()->with('success', "{$user->name}'s role updated to {$request->role}.");
     }
 
     public function destroy($userId)
@@ -40,11 +40,11 @@ class UserController extends Controller
         $user      = $userModel::findOrFail($userId);
 
         if ($user->id === auth()->id()) {
-            return back()->withErrors(['delete' => 'Tidak bisa menghapus akun sendiri.']);
+            return back()->withErrors(['delete' => 'Cannot delete your own account.']);
         }
 
         $user->delete();
 
-        return back()->with('success', "{$user->name} berhasil dihapus.");
+        return back()->with('success', "{$user->name} deleted successfully.");
     }
 }
