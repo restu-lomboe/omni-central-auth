@@ -3,11 +3,11 @@
     <div class="max-w-xl">
         <div class="mb-6">
             <a href="{{ route('omni.dashboard.clients.index') }}"
-               class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-omni-500 transition-colors">
+                class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-omni-500 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
-                Kembali ke OAuth Clients
+                Back to OAuth Clients
             </a>
         </div>
 
@@ -33,10 +33,10 @@
                 <div>
                     <p class="text-xs font-medium text-gray-500 mb-0.5">Client Secret</p>
                     <p class="text-sm font-mono text-gray-800 select-all blur-sm hover:blur-none transition-all cursor-pointer"
-                       title="Klik untuk melihat">
+                        title="Click to view">
                         {{ $client->secret }}
                     </p>
-                    <p class="text-xs text-gray-400 mt-0.5">Hover untuk melihat secret.</p>
+                    <p class="text-xs text-gray-400 mt-0.5">Hover to reveal secret.</p>
                 </div>
             </div>
 
@@ -46,11 +46,11 @@
 
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-1.5">
-                        Nama Aplikasi <span class="text-red-500">*</span>
+                        Application Name <span class="text-red-500">*</span>
                     </label>
-                    <input id="name" type="text" name="name"
-                           value="{{ old('name', $client->name) }}" required
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm
+                    <input id="name" type="text" name="name" value="{{ old('name', $client->name) }}"
+                        required
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm
                                   focus:outline-none focus:ring-2 focus:ring-omni-500 focus:border-transparent
                                   @error('name') border-red-500 @enderror">
                 </div>
@@ -60,22 +60,23 @@
                         Redirect URI <span class="text-red-500">*</span>
                     </label>
                     <input id="redirect" type="url" name="redirect"
-                           value="{{ old('redirect', $client->redirect) }}" required
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono
+                        value="{{ old('redirect', json_decode($client->getAttributes()['redirect_uris'] ?? '[]', true)[0] ?? '') }}"
+                        required
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-mono
                                   focus:outline-none focus:ring-2 focus:ring-omni-500 focus:border-transparent
                                   @error('redirect') border-red-500 @enderror">
                 </div>
 
                 <div class="pt-2 flex gap-3">
                     <button type="submit"
-                            class="bg-omni-500 hover:bg-omni-600 text-white font-medium px-5 py-2.5
+                        class="bg-omni-500 hover:bg-omni-600 text-white font-medium px-5 py-2.5
                                    rounded-lg text-sm transition-colors">
-                        Simpan Perubahan
+                        Save Changes
                     </button>
                     <a href="{{ route('omni.dashboard.clients.index') }}"
-                       class="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm
+                        class="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg text-sm
                               hover:bg-gray-50 transition-colors">
-                        Batal
+                        Cancel
                     </a>
                 </div>
             </form>
@@ -85,17 +86,16 @@
         <div class="mt-4 bg-red-50 border border-red-200 rounded-xl p-5">
             <h3 class="text-sm font-semibold text-red-800 mb-1">Danger Zone</h3>
             <p class="text-xs text-red-600 mb-4">
-                Menghapus client akan mencabut semua token yang diterbitkan untuk aplikasi ini.
-                Pengguna yang sedang login via client ini akan ter-logout.
+                Deleting this client will revoke all tokens issued to this application. Users currently logged in via this client will be logged out.
             </p>
             <form method="POST" action="{{ route('omni.dashboard.clients.destroy', $client->id) }}"
-                  onsubmit="return confirm('Yakin ingin menghapus client {{ $client->name }}? Semua token akan dicabut.')">
+                onsubmit="return confirm('Delete client {{ $client->name }}? All tokens will be revoked.')">
                 @csrf
                 @method('DELETE')
                 <button type="submit"
-                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium
+                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium
                                rounded-lg transition-colors">
-                    Hapus Client
+                    Delete Client
                 </button>
             </form>
         </div>

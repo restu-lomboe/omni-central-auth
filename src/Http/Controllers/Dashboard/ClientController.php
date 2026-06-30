@@ -4,8 +4,8 @@ namespace DeveloperAwam\OmniCentralAuth\Http\Controllers\Dashboard;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Str;
 use Laravel\Passport\Client;
+use Laravel\Passport\ClientRepository;
 
 class ClientController extends Controller
 {
@@ -28,15 +28,13 @@ class ClientController extends Controller
             'redirect'     => ['required', 'url'],
         ]);
 
-        Client::create([
-            'user_id'                => auth()->id(),
-            'name'                   => $request->name,
-            'secret'                 => Str::random(40),
-            'redirect'               => $request->redirect,
-            'personal_access_client' => false,
-            'password_client'        => false,
-            'revoked'                => false,
-        ]);
+        $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient(
+            user: auth()->user(),
+            name: $request->name,
+            redirectUris: [$request->redirect],
+            confidential: true,
+            enableDeviceFlow: false,
+        );
 
         return redirect()->route('omni.dashboard.clients.index')
             ->with('success', "Client \"{$request->name}\" created successfully.");
@@ -45,7 +43,6 @@ class ClientController extends Controller
     public function edit($id)
     {
         $client = Client::findOrFail($id);
-
         abort_if(! $client, 404);
 
         return view('omni::dashboard.clients.edit', compact('client'));
@@ -61,7 +58,10 @@ class ClientController extends Controller
         $client = Client::findOrFail($id);
         abort_if(! $client, 404);
 
-        $client->update(['name' => $request->name, 'redirect' => $request->redirect]);
+        $client->update([
+            'name'          => $request->name,
+            'redirect_uris' => [$request->redirect],
+        ]);
 
         return redirect()->route('omni.dashboard.clients.index')
             ->with('success', 'Client updated successfully.');
@@ -75,6 +75,6 @@ class ClientController extends Controller
         $client->update(['revoked' => true]);
 
         return redirect()->route('omni.dashboard.clients.index')
-            ->with('success', 'Client berhasil dihapus.');
+            ->with('success', 'Client deleted successfully.');
     }
 }

@@ -23,7 +23,7 @@ class UsersTable extends Component
         $user      = $userModel::findOrFail($userId);
 
         if ($user->id === auth()->id()) {
-            $this->addError('role', 'Tidak bisa mengubah role sendiri.');
+            $this->addError('role', 'Cannot change your own role.');
             return;
         }
 
@@ -38,13 +38,13 @@ class UsersTable extends Component
         $user      = $userModel::findOrFail($userId);
 
         if ($user->id === auth()->id()) {
-            $this->addError('delete', 'Tidak bisa menghapus akun sendiri.');
+            $this->addError('delete', 'Cannot delete your own account.');
             return;
         }
 
         $user->delete();
 
-        session()->flash('success', "{$user->name} berhasil dihapus.");
+        session()->flash('success', "{$user->name} deleted successfully.");
     }
 
     public function render()

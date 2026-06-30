@@ -14,6 +14,7 @@ it('builds correct authorize url pointing to sso server', function () {
     ]);
 
     $request = \Illuminate\Http\Request::create('/omni/login');
+    $request->setLaravelSession(app('session')->driver());
 
     $provider = new OmniSocialiteProvider(
         $request,
@@ -33,6 +34,7 @@ it('maps sso user object correctly', function () {
     config(['omni-central-auth.client.server_url' => 'https://sso.example.com']);
 
     $request = \Illuminate\Http\Request::create('/omni/login');
+    $request->setLaravelSession(app('session')->driver());
 
     $provider = new OmniSocialiteProvider($request, 'id', 'secret', 'https://app.example.com/callback');
 

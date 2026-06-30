@@ -14,12 +14,12 @@
         </div>
 
         <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <p class="text-sm text-gray-500 mb-1">Login Hari Ini</p>
+            <p class="text-sm text-gray-500 mb-1">Today's Logins</p>
             <p class="text-3xl font-bold text-green-600">{{ $stats['logins_today'] }}</p>
         </div>
 
         <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <p class="text-sm text-gray-500 mb-1">Gagal Login Hari Ini</p>
+            <p class="text-sm text-gray-500 mb-1">Today's Failed Logins</p>
             <p class="text-3xl font-bold text-red-500">{{ $stats['failed_today'] }}</p>
         </div>
 
@@ -37,7 +37,7 @@
                 </svg>
             </div>
             <h3 class="font-semibold text-gray-900 mb-1">OAuth Clients</h3>
-            <p class="text-sm text-gray-500">Kelola aplikasi yang terhubung ke SSO server ini.</p>
+            <p class="text-sm text-gray-500">Manage applications connected to this SSO server.</p>
         </a>
 
         <a href="/{{ $prefix }}/users"
@@ -48,7 +48,7 @@
                 </svg>
             </div>
             <h3 class="font-semibold text-gray-900 mb-1">Users & Roles</h3>
-            <p class="text-sm text-gray-500">Kelola pengguna dan hak akses mereka.</p>
+            <p class="text-sm text-gray-500">Manage users and their permissions.</p>
         </a>
 
         <a href="/{{ $prefix }}/audit-log"
@@ -59,7 +59,7 @@
                 </svg>
             </div>
             <h3 class="font-semibold text-gray-900 mb-1">Audit Log</h3>
-            <p class="text-sm text-gray-500">Pantau aktivitas login dan penggunaan token.</p>
+            <p class="text-sm text-gray-500">Monitor login activity and token usage.</p>
         </a>
     </div>
 

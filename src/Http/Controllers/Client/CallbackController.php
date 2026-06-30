@@ -2,55 +2,59 @@
 
 namespace DeveloperAwam\OmniCentralAuth\Http\Controllers\Client;
 
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Laravel\Socialite\Facades\Socialite;
+use DeveloperAwam\OmniCentralAuth\Http\Controllers\Server\AuthorizationController;
 use DeveloperAwam\OmniCentralAuth\Models\AuditLog;
 
 class CallbackController extends Controller
 {
-    /**
-     * Handle callback dari SSO Server setelah user authorize.
-     */
-    public function handle()
+    public function handle(Request $request)
     {
-        try {
-            $ssoUser = Socialite::driver('omni')->user();
-        } catch (\Exception $e) {
+        $ssoData = $request->query('sso_data');
 
-            AuditLog::record('login_failed', ['reason' => $e->getMessage()]);
+        if (! $ssoData) {
+            AuditLog::record('login_failed', ['reason' => 'Missing sso_data parameter']);
 
             return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
-                ->withErrors(['sso' => 'Login SSO gagal. Silakan coba lagi.']);
+                ->withErrors(['sso' => 'SSO login failed. Data not found.']);
+        }
+
+        $signingKey = config('omni-central-auth.client.signing_key');
+
+        if (! $signingKey) {
+            AuditLog::record('login_failed', ['reason' => 'Signing key not configured']);
+
+            return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
+                ->withErrors(['sso' => 'Signing key configuration not found.']);
+        }
+
+        $userData = AuthorizationController::decryptPayload($ssoData, $signingKey);
+
+        if (! $userData) {
+            AuditLog::record('login_failed', ['reason' => 'Invalid or tampered payload']);
+
+            return redirect()->to(config('omni-central-auth.client.server_url') . '/login')
+                ->withErrors(['sso' => 'Invalid login data. Please try again.']);
         }
 
         $userModel = config('omni-central-auth.user_model');
 
-        // Cari atau buat user lokal berdasarkan email dari SSO Server
         $localUser = $userModel::firstOrCreate(
-            ['email' => $ssoUser->getEmail()],
+            ['email' => $userData['email']],
             [
-                'name'              => $ssoUser->getName(),
-                'email'             => $ssoUser->getEmail(),
-                'password'          => null, // tidak pakai password lokal
-                'omni_id'           => $ssoUser->getId(),
-                'omni_token'        => $ssoUser->token,
-                'omni_refresh_token'=> $ssoUser->refreshToken,
+                'name'     => $userData['name'],
+                'email'    => $userData['email'],
+                'password' => null,
+                'omni_id'  => $userData['omni_id'],
             ]
         );
-
-        // Update token jika user sudah ada
-        if (! $localUser->wasRecentlyCreated) {
-            $localUser->update([
-                'omni_token'        => $ssoUser->token,
-                'omni_refresh_token'=> $ssoUser->refreshToken,
-            ]);
-        }
 
         auth()->login($localUser, true);
 
         AuditLog::record('login', [
-            'via'      => 'sso',
-            'omni_id'  => $ssoUser->getId(),
+            'via'     => 'sso',
+            'omni_id' => $userData['omni_id'],
         ]);
 
         return redirect()->intended(

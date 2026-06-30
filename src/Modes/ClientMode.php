@@ -17,7 +17,7 @@ class ClientMode
     {
         $socialite = app(SocialiteFactory::class);
 
-        // Daftarkan custom OAuth2 driver yang mengarah ke SSO Server
+        // Register a custom OAuth2 driver that points to the SSO Server
         $socialite->extend('omni', function () use ($socialite) {
             $config = [
                 'client_id'     => config('omni-central-auth.client.client_id'),

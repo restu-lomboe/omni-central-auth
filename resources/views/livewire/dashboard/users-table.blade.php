@@ -1,14 +1,14 @@
 <div>
     {{-- Filters --}}
     <div class="flex flex-wrap items-center gap-3 mb-6">
-        <input wire:model.live="search" type="text" placeholder="Cari nama atau email..."
+        <input wire:model.live="search" type="text" placeholder="Search name or email..."
                class="w-64 px-4 py-2 border border-gray-300 rounded-lg text-sm
                       focus:outline-none focus:ring-2 focus:ring-omni-500">
 
         <select wire:model.live="roleFilter"
                 class="px-4 py-2 border border-gray-300 rounded-lg text-sm
                        focus:outline-none focus:ring-2 focus:ring-omni-500">
-            <option value="">Semua Role</option>
+            <option value="">All Roles</option>
             <option value="admin">Admin</option>
             <option value="user">User</option>
         </select>
@@ -27,7 +27,7 @@
                 <tr>
                     <th class="text-left px-6 py-3 text-gray-500 font-medium">User</th>
                     <th class="text-left px-6 py-3 text-gray-500 font-medium">Role</th>
-                    <th class="text-left px-6 py-3 text-gray-500 font-medium">Terdaftar</th>
+                    <th class="text-left px-6 py-3 text-gray-500 font-medium">Registered</th>
                     <th class="text-left px-6 py-3 text-gray-500 font-medium">2FA</th>
                     <th class="px-6 py-3"></th>
                 </tr>
@@ -58,7 +58,7 @@
                                 </select>
                             @else
                                 <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-omni-100 text-omni-700">
-                                    {{ $user->role ?? 'admin' }} (kamu)
+                                    {{ $user->role ?? 'admin' }} (you)
                                 </span>
                             @endif
                         </td>
@@ -67,17 +67,17 @@
                         </td>
                         <td class="px-6 py-4">
                             @if (! empty($user->two_factor_secret))
-                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Aktif</span>
+                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Active</span>
                             @else
-                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">Nonaktif</span>
+                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">Inactive</span>
                             @endif
                         </td>
                         <td class="px-6 py-4 text-right">
                             @if ($user->id !== auth()->id())
                                 <button wire:click="deleteUser({{ $user->id }})"
-                                        wire:confirm="Yakin hapus {{ $user->name }}? Data tidak bisa dikembalikan."
+                                        wire:confirm="Delete {{ $user->name }}? This cannot be undone."
                                         class="text-red-400 hover:text-red-600 text-xs">
-                                    Hapus
+                                    Delete
                                 </button>
                             @endif
                         </td>
@@ -85,7 +85,7 @@
                 @empty
                     <tr>
                         <td colspan="5" class="px-6 py-12 text-center text-gray-400 text-sm">
-                            Tidak ada user ditemukan.
+                            No users found.
                         </td>
                     </tr>
                 @endforelse

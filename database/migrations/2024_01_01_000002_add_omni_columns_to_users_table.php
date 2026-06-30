@@ -18,14 +18,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // ID user di SSO Server (Identity Provider)
+            // ID user di SSO Server (Identity Provider) — referensi user lintas sistem
             $table->string('omni_id')->nullable()->after('id');
-
-            // Access token OAuth2 yang aktif
-            $table->text('omni_token')->nullable()->after('omni_id');
-
-            // Refresh token untuk memperbarui access token
-            $table->text('omni_refresh_token')->nullable()->after('omni_token');
 
             // Password dibuat nullable karena client app tidak menyimpan password
             // Jalankan ini hanya jika kolom password belum nullable
@@ -39,7 +33,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropIndex(['omni_id']);
-            $table->dropColumn(['omni_id', 'omni_token', 'omni_refresh_token']);
+            $table->dropColumn('omni_id');
         });
     }
 };

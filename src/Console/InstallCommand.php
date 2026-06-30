@@ -3,14 +3,20 @@
 namespace DeveloperAwam\OmniCentralAuth\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Laravel\Passport\ClientRepository;
 
 class InstallCommand extends Command
 {
-    protected $signature = 'omni:install
-                            {--mode= : Mode instalasi: server, client, atau both}
-                            {--force : Timpa file yang sudah ada}';
+    protected bool $adminCreated = false;
 
-    protected $description = 'Install dan setup package Omni Central Auth';
+    protected $signature = 'omni:install
+                            {--mode= : Installation mode: server or client}
+                            {--force : Overwrite existing files}';
+
+    protected $description = 'Install and setup Omni Central Auth package';
 
     public function handle(): int
     {
@@ -18,7 +24,7 @@ class InstallCommand extends Command
 
         $mode = $this->option('mode') ?? $this->askMode();
 
-        $this->info("⚙️  Mode dipilih: [{$mode}]");
+        $this->info("⚙️  Selected mode: [{$mode}]");
         $this->newLine();
 
         // Publish config
@@ -28,19 +34,28 @@ class InstallCommand extends Command
         $this->publishMigrations();
 
         // Publish views
-        if ($this->confirm('Publish views untuk dikustomisasi?', false)) {
+        if ($this->confirm('Publish views for customization?', false)) {
             $this->publishViews();
         }
+
+        // Run pending migrations to prevent duplicate errors
+        // when passport:install or createAdminUser runs migrate later
+        $this->runMigrations();
 
         // Mode-specific setup
         match ($mode) {
             'server' => $this->setupServer(),
             'client' => $this->setupClient(),
-            'both'   => $this->setupServer() & $this->setupClient(),
         };
 
         // Set env
         $this->setEnvVariable('OMNI_AUTH_MODE', $mode);
+
+        // Create admin user
+        if ($mode === 'server') {
+            $this->newLine();
+            $this->createAdminUser();
+        }
 
         $this->newLine();
         $this->displaySuccess($mode);
@@ -51,11 +66,10 @@ class InstallCommand extends Command
     protected function askMode(): string
     {
         return $this->choice(
-            'Apa peran aplikasi ini?',
+            "What is this application's role?",
             [
-                'server' => 'server — Aplikasi ini adalah SSO Server (Identity Provider)',
-                'client' => 'client — Aplikasi ini adalah Aplikasi Klien (Service Provider)',
-                'both'   => 'both   — Keduanya (untuk development)',
+                'server' => 'server — This app is the SSO Server (Identity Provider)',
+                'client' => 'client — This app is a Client App (Service Provider)',
             ],
             'server'
         );
@@ -67,16 +81,24 @@ class InstallCommand extends Command
             '--tag'   => 'omni-config',
             '--force' => $this->option('force'),
         ]);
-        $this->line('  <fg=green>✔</> Config dipublish ke <fg=cyan>config/omni-central-auth.php</>');
+        $this->line('  <fg=green>✔</> Config published to <fg=cyan>config/omni-central-auth.php</>');
     }
 
     protected function publishMigrations(): void
     {
+        // Check if any omni migration already exists
+        $existing = glob(database_path('migrations/*_create_omni_audit_logs_table.php'));
+        
+        if (! empty($existing)) {
+            $this->line('  <fg=green>✔</> Migrations already exist — skipped');
+
+            return;
+        }
+
         $this->callSilently('vendor:publish', [
-            '--tag'   => 'omni-migrations',
-            '--force' => $this->option('force'),
+            '--tag' => 'omni-migrations',
         ]);
-        $this->line('  <fg=green>✔</> Migrations dipublish ke <fg=cyan>database/migrations/</>');
+        $this->line('  <fg=green>✔</> Migrations published to <fg=cyan>database/migrations/</>');
     }
 
     protected function publishViews(): void
@@ -85,7 +107,7 @@ class InstallCommand extends Command
             '--tag'   => 'omni-views',
             '--force' => $this->option('force'),
         ]);
-        $this->line('  <fg=green>✔</> Views dipublish ke <fg=cyan>resources/views/vendor/omni/</>');
+        $this->line('  <fg=green>✔</> Views published to <fg=cyan>resources/views/vendor/omni/</>');
     }
 
     protected function setupServer(): void
@@ -93,13 +115,61 @@ class InstallCommand extends Command
         $this->newLine();
         $this->line('  <fg=yellow>SERVER MODE SETUP</>');
 
-        // Install Passport
-        $this->call('passport:install');
-        $this->line('  <fg=green>✔</> Passport keys & clients dibuat');
+        // Generate passport keys (safe to re-run, --force to overwrite)
+        $this->call('passport:keys', ['--force' => $this->option('force')]);
 
-        // Reminder
-        $this->line('  <fg=yellow>!</> Tambahkan <fg=cyan>HasApiTokens</> trait ke model User kamu');
-        $this->line('  <fg=yellow>!</> Tambahkan <fg=cyan>TwoFactorAuthenticatable</> trait untuk 2FA');
+        // Publish passport config
+        $this->callSilently('vendor:publish', ['--tag' => 'passport-config', '--force' => $this->option('force')]);
+
+        // Check if passport migrations already exist
+        $passportPublished = ! empty(glob(database_path('migrations/*_create_oauth_auth_codes_table.php')));
+
+        if (! $passportPublished) {
+            $this->callSilently('vendor:publish', ['--tag' => 'passport-migrations']);
+            $this->call('migrate');
+            $this->line('  <fg=green>✔</> Passport migrations created & run');
+        } else {
+            $this->line('  <fg=green>✔</> Passport migrations already exist — skipped');
+        }
+
+        // Create personal access client (skip if already exists)
+        if ($this->confirm('Create a personal access client?', false)) {
+            $this->call('passport:client', ['--personal' => true, '--name' => config('app.name') . ' Personal Access']);
+        }
+
+        // Generate SSO signing key
+        $signingKey = Str::random(64);
+        $this->setEnvVariable('OMNI_CENTRAL_SIGNING_KEY', $signingKey);
+
+        $this->line('  <fg=green>✔</> Passport keys & config ready');
+        $this->newLine();
+        $this->line('  <fg=green>✔ SSO Signing Key generated!</>');
+        $this->line('     <fg=cyan>' . $signingKey . '</>');
+        $this->line('  (auto-saved to .env as OMNI_CENTRAL_SIGNING_KEY)');
+
+        // Create default OAuth client for SSO
+        if ($this->confirm('Create an OAuth client for SSO client apps?', true)) {
+            $name = $this->ask('OAuth client name', config('app.name') . ' SSO Client');
+            $redirect = $this->ask('Redirect URI', 'http://localhost:8000/omni/callback');
+
+            $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient(
+                name: $name,
+                redirectUris: [$redirect],
+                confidential: true,
+            );
+
+            $this->newLine();
+            $this->line('  <fg=green>✔ OAuth client created!</>');
+            $this->line('     Client ID    : <fg=cyan>' . $client->getKey() . '</>');
+            $this->line('     Client Secret: <fg=cyan>' . ($client->plainSecret ?? 'hidden') . '</>');
+            $this->line('');
+            $this->line('  Add these to your client app\'s <fg=cyan>.env</>:');
+            $this->line('       OMNI_CLIENT_ID=' . $client->getKey());
+            $this->line("       OMNI_CLIENT_SECRET={$client->plainSecret}");
+            $this->line('       OMNI_CLIENT_REDIRECT_URI=' . $redirect);
+            $this->line('       OMNI_CENTRAL_SIGNING_KEY=' . $signingKey);
+        }
+
     }
 
     protected function setupClient(): void
@@ -107,10 +177,11 @@ class InstallCommand extends Command
         $this->newLine();
         $this->line('  <fg=yellow>CLIENT MODE SETUP</>');
 
-        $this->line('  <fg=yellow>!</> Isi variabel berikut di file <fg=cyan>.env</> kamu:');
+        $this->line('  <fg=yellow>!</> Set the following variables in your <fg=cyan>.env</> file:');
         $this->line('       OMNI_CLIENT_SERVER_URL=https://your-sso-server.com');
         $this->line('       OMNI_CLIENT_ID=your-client-id');
         $this->line('       OMNI_CLIENT_SECRET=your-client-secret');
+        $this->line('       OMNI_CENTRAL_SIGNING_KEY=copy-from-server');
     }
 
     protected function setEnvVariable(string $key, string $value): void
@@ -130,7 +201,14 @@ class InstallCommand extends Command
         }
 
         file_put_contents($path, $content);
-        $this->line("  <fg=green>✔</> .env diperbarui: <fg=cyan>{$key}={$value}</>");
+        $this->line("  <fg=green>✔</> .env updated: <fg=cyan>{$key}={$value}</>");
+    }
+
+    protected function runMigrations(): void
+    {
+        if ($this->confirm('Run pending database migrations now?', true)) {
+            $this->call('migrate');
+        }
     }
 
     protected function displayBanner(): void
@@ -147,25 +225,91 @@ class InstallCommand extends Command
         $this->newLine();
     }
 
+    protected function createAdminUser(): void
+    {
+        if (! $this->confirm('Create an admin user now? (to log in immediately)', true)) {
+            $this->line('  <fg=yellow>!</> Skipping admin user creation. Run <fg=cyan>php artisan migrate</> first, then register the first user on the register page.');
+
+            return;
+        }
+
+        $this->callSilently('migrate');
+
+        $userModel = config('omni-central-auth.user_model');
+
+        if ($userModel::count() > 0) {
+            $this->warn('  Users already exist in the database. Skipping admin creation.');
+
+            return;
+        }
+
+        $this->newLine();
+        $this->line('  <fg=yellow>Create admin user</>');
+
+        $name = $this->ask('Full name');
+        $email = $this->ask('Email');
+        $password = $this->secret('Password (min. 8 characters)');
+
+        $validator = Validator::make([
+            'name'     => $name,
+            'email'    => $email,
+            'password' => $password,
+        ], [
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:8'],
+        ]);
+
+        if ($validator->fails()) {
+            foreach ($validator->errors()->all() as $error) {
+                $this->error("  ✗ {$error}");
+            }
+
+            return;
+        }
+
+        $user = $userModel::create([
+            'name'     => $name,
+            'email'    => $email,
+            'password' => Hash::make($password),
+            'role'     => 'admin',
+            'is_admin' => true,
+        ]);
+
+        $this->adminCreated = true;
+
+        $this->newLine();
+        $this->line('  <fg=green>✔ Admin user created successfully!</>');
+        $this->line('     Email: <fg=cyan>' . $user->email . '</>');
+        $this->line('     Role : <fg=cyan>admin</>');
+        $this->line('');
+        $this->line('  You can now log in at <fg=cyan>/login</>');
+    }
+
     protected function displaySuccess(string $mode): void
     {
-        $this->line('  <fg=green>✔ Instalasi selesai!</>');
+        $this->line('  <fg=green>✔ Installation complete!</>');
         $this->newLine();
-        $this->line('  Langkah selanjutnya:');
-        $this->line('  1. Jalankan <fg=cyan>php artisan migrate</>');
+        $this->line('  Next steps:');
 
-        if (in_array($mode, ['server', 'both'])) {
-            $this->line('  2. Tambahkan trait ke User model (lihat dokumentasi)');
-            $this->line('  3. Buka <fg=cyan>/omni-dashboard</> untuk manage OAuth Clients');
+        if (! $this->adminCreated) {
+            $this->line('  1. Run <fg=cyan>php artisan migrate</>');
         }
 
-        if (in_array($mode, ['client', 'both'])) {
-            $this->line('  2. Isi kredensial client di <fg=cyan>.env</>');
-            $this->line('  3. Tambahkan tombol login: <fg=cyan>@include(\'omni::components.login-button\')</>');
+        $step = $this->adminCreated ? 1 : 2;
+
+        if ($mode === 'server') {
+            $this->line("  {$step}. Add <fg=cyan>HasApiTokens</> & <fg=cyan>TwoFactorAuthenticatable</> traits to User model");
+            $this->line('  ' . ($step + 1) . '. Visit <fg=cyan>/omni-dashboard</> to manage OAuth Clients');
+        }
+
+        if ($mode === 'client') {
+            $this->line("  {$step}. Fill in client credentials in <fg=cyan>.env</> (including OMNI_CENTRAL_SIGNING_KEY)");
+            $this->line('  ' . ($step + 1) . '. Add login button: <fg=cyan>@include(\'omni::components.login-button\')</>');
         }
 
         $this->newLine();
-        $this->line('  📖 Dokumentasi: <fg=cyan>https://developerawam.com/omni-central-auth</>');
+        $this->line('  📖 Documentation: <fg=cyan>https://developerawam.com/omni-central-auth</>');
         $this->newLine();
     }
 }

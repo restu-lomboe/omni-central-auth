@@ -1,12 +1,12 @@
 <div>
     {{-- Filters --}}
     <div class="flex flex-wrap items-center gap-3 mb-6">
-        <input wire:model.live="search" type="text" placeholder="Cari user..."
+        <input wire:model.live="search" type="text" placeholder="Search user..."
             class="w-52 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-omni-500">
 
         <select wire:model.live="eventFilter"
             class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-omni-500">
-            <option value="">Semua Event</option>
+            <option value="">All Events</option>
             @foreach ($events as $event)
                 <option value="{{ $event }}">{{ $event }}</option>
             @endforeach
@@ -14,7 +14,7 @@
 
         <input wire:model.live="dateFrom" type="date"
             class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-omni-500">
-        <span class="text-gray-400 text-sm">s/d</span>
+        <span class="text-gray-400 text-sm">to</span>
         <input wire:model.live="dateTo" type="date"
             class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-omni-500">
     </div>
@@ -64,7 +64,7 @@
                 @empty
                     <tr>
                         <td colspan="5" class="px-6 py-12 text-center text-gray-400 text-sm">
-                            Belum ada aktivitas yang tercatat.
+                            No activity recorded yet.
                         </td>
                     </tr>
                 @endforelse

@@ -1,13 +1,12 @@
 <?php
 
 use DeveloperAwam\OmniCentralAuth\Tests\TestCase;
-use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Client;
 
 uses(TestCase::class);
 
 beforeEach(function () {
     $this->admin   = $this->adminUser();
-    $this->clients = app(ClientRepository::class);
 });
 
 it('admin can create a new oauth client', function () {
@@ -18,10 +17,10 @@ it('admin can create a new oauth client', function () {
         ])
         ->assertRedirect(route('omni.dashboard.clients.index'));
 
-    $client = $this->clients->all()->first(fn ($c) => $c->name === 'Aplikasi HR');
-
+    $client = Client::where('name', 'Aplikasi HR')->first();
     expect($client)->not->toBeNull();
-    expect($client->redirect)->toBe('https://hr.example.com/omni/callback');
+    expect(json_decode($client->getAttributes()['redirect_uris'], true)[0])
+        ->toBe('https://hr.example.com/omni/callback');
 });
 
 it('create client validates required fields', function () {
@@ -40,15 +39,13 @@ it('create client validates redirect must be a url', function () {
 });
 
 it('admin can edit an oauth client', function () {
-    $client = $this->clients->create(
-        userId: $this->admin->id,
-        name: 'Old Name',
-        redirect: 'https://old.example.com/callback',
-        provider: null,
-        personalAccess: false,
-        password: false,
-        confidential: true,
-    );
+    $client = Client::create([
+        'name'          => 'Old Name',
+        'redirect_uris' => json_encode(['https://old.example.com/callback']),
+        'grant_types'   => json_encode(['authorization_code', 'refresh_token']),
+        'secret'        => \Illuminate\Support\Str::random(40),
+        'revoked'       => false,
+    ]);
 
     $this->actingAs($this->admin)
         ->put(route('omni.dashboard.clients.update', $client->id), [
@@ -57,26 +54,24 @@ it('admin can edit an oauth client', function () {
         ])
         ->assertRedirect(route('omni.dashboard.clients.index'));
 
-    $updated = $this->clients->find($client->id);
+    $updated = Client::find($client->id);
     expect($updated->name)->toBe('New Name');
-    expect($updated->redirect)->toBe('https://new.example.com/callback');
+    expect($updated->redirect_uris[0])->toBe('https://new.example.com/callback'); // ← access cast array directly
 });
 
 it('admin can delete an oauth client', function () {
-    $client = $this->clients->create(
-        userId: $this->admin->id,
-        name: 'To Be Deleted',
-        redirect: 'https://delete.example.com/callback',
-        provider: null,
-        personalAccess: false,
-        password: false,
-        confidential: true,
-    );
+    $client = Client::create([
+        'name'          => 'Old Name',
+        'redirect_uris' => json_encode(['https://old.example.com/callback']),
+        'grant_types'   => json_encode(['authorization_code', 'refresh_token']), // ← add this
+        'secret'        => \Illuminate\Support\Str::random(40),
+        'revoked'       => false,
+    ]);
 
     $this->actingAs($this->admin)
         ->delete(route('omni.dashboard.clients.destroy', $client->id))
         ->assertRedirect(route('omni.dashboard.clients.index'));
 
-    $deleted = $this->clients->find($client->id);
+    $deleted = $client->find($client->id);
     expect($deleted->revoked)->toBeTrue();
 });

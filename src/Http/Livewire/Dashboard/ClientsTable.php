@@ -25,13 +25,21 @@ class ClientsTable extends Component
         $this->resetPage();
     }
 
-    public function revokeClient(int $clientId): void
+    public function revokeClient($clientId)
     {
         $client = $this->clients->find($clientId);
-
+        $client->update(['revoked' => true]);
         if ($client) {
-            $this->clients->delete($client);
-            session()->flash('success', 'Client berhasil direvoke.');
+            $this->dispatch('notify', message: 'Client revoked successfully.');
+        }
+    }
+
+    public function restoreClient($clientId)
+    {
+        $client = $this->clients->find($clientId);
+        $client->update(['revoked' => false]);
+        if ($client) {
+            $this->dispatch('notify', message: 'Client restored successfully.');
         }
     }
 

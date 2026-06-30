@@ -7,24 +7,20 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Admin Dashboard' }} — {{ config('omni-central-auth.server.app_name') }}</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        omni: {
-                            50: '#fff7ed',
-                            100: '#ffedd5',
-                            500: '#FF6B35',
-                            600: '#ea580c',
-                            700: '#c2410c',
-                        }
-                    }
-                }
-            }
+    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    @endif
+    <style type="text/tailwindcss">
+        @theme {
+            --color-omni-50: #fff7ed;
+            --color-omni-100: #ffedd5;
+            --color-omni-500: #FF6B35;
+            --color-omni-600: #ea580c;
+            --color-omni-700: #c2410c;
         }
-    </script>
+    </style>
     @livewireStyles
 </head>
 
@@ -122,6 +118,17 @@
                         {{ session('success') }}
                     </div>
                 @endif
+                <div x-data="{ show: false, message: '' }"
+                    x-on:notify.window="
+                        message = $event.detail.message;
+                        show = true;
+                        setTimeout(() => show = false, 3000);
+                    ">
+                    <div x-show="show"
+                        class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">
+                        <span x-text="message"></span>
+                    </div>
+                </div>
 
                 {{ $slot }}
             </div>

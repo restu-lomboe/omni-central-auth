@@ -34,7 +34,11 @@ return [
         'passkeys' => env('OMNI_SERVER_PASSKEYS', false),
 
         // URL redirect default setelah login berhasil
-        'home_url' => env('OMNI_SERVER_HOME', '/dashboard'),
+        'home_url' => env('OMNI_SERVER_HOME', '/user'),
+
+        // Signing key untuk encrypt data user yang dikirim ke client callback
+        // HARUS sama dengan yang diset di client
+        'signing_key' => env('OMNI_CENTRAL_SIGNING_KEY'),
     ],
 
     /*
@@ -60,7 +64,11 @@ return [
         'home_url' => env('OMNI_CLIENT_HOME', '/dashboard'),
 
         // Label tombol login (tampil di halaman login client)
-        'button_label' => env('OMNI_CLIENT_BUTTON_LABEL', 'Login dengan Akun Pusat'),
+        'button_label' => env('OMNI_CLIENT_BUTTON_LABEL', 'Login with Central Account'),
+
+        // Signing key untuk verifikasi payload dari SSO Server
+        // HARUS sama dengan yang diset di server
+        'signing_key' => env('OMNI_CENTRAL_SIGNING_KEY'),
     ],
 
     /*
