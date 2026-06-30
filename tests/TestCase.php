@@ -2,6 +2,7 @@
 
 namespace DeveloperAwam\OmniCentralAuth\Tests;
 
+use Illuminate\Database\Schema\Blueprint;
 use Orchestra\Testbench\TestCase as Orchestra;
 use DeveloperAwam\OmniCentralAuth\OmniCentralAuthServiceProvider;
 use Laravel\Passport\PassportServiceProvider;
@@ -49,9 +50,10 @@ abstract class TestCase extends Orchestra
 
     protected function loadMigrationsForTests(): void
     {
-        // Users table — contains ALL columns needed by tests
-        // (manually defined to avoid loading conflicting package migrations)
-        $this->app['db']->connection()->getSchemaBuilder()->create('users', function ($table) {
+        $schema = $this->app['db']->connection()->getSchemaBuilder();
+
+        // 1. Users table
+        $schema->create('users', function (Blueprint $table) {
             $table->id();
             $table->string('omni_id')->nullable();
             $table->string('name');
@@ -66,18 +68,64 @@ abstract class TestCase extends Orchestra
             $table->timestamps();
         });
 
-        // Load Passport migrations
-        $this->loadMigrationsFrom(
-            __DIR__ . '/../../vendor/laravel/passport/database/migrations'
-        );
+        // 2. Passport tables (defined inline to avoid migration loading issues)
+        $schema->create('oauth_clients', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->nullableMorphs('owner');
+            $table->string('name');
+            $table->string('secret')->nullable();
+            $table->string('provider')->nullable();
+            $table->text('redirect_uris');
+            $table->text('grant_types');
+            $table->boolean('revoked');
+            $table->timestamps();
+        });
 
-        // Load audit log migration
-        $this->loadMigrationsFrom(
-            __DIR__ . '/../database/migrations/2024_01_01_000001_create_omni_audit_logs_table.php'
-        );
+        $schema->create('oauth_auth_codes', function (Blueprint $table) {
+            $table->char('id', 80)->primary();
+            $table->foreignId('user_id')->index();
+            $table->foreignUuid('client_id');
+            $table->text('scopes')->nullable();
+            $table->boolean('revoked');
+            $table->dateTime('expires_at')->nullable();
+        });
 
-        // Run all pending migrations
-        $this->artisan('migrate', ['--force' => true]);
+        $schema->create('oauth_access_tokens', function (Blueprint $table) {
+            $table->char('id', 80)->primary();
+            $table->foreignId('user_id')->nullable()->index();
+            $table->foreignUuid('client_id');
+            $table->string('name')->nullable();
+            $table->text('scopes')->nullable();
+            $table->boolean('revoked');
+            $table->timestamps();
+            $table->dateTime('expires_at')->nullable();
+        });
+
+        $schema->create('oauth_refresh_tokens', function (Blueprint $table) {
+            $table->char('id', 80)->primary();
+            $table->char('access_token_id', 80)->index();
+            $table->boolean('revoked');
+            $table->dateTime('expires_at')->nullable();
+        });
+
+        $schema->create('oauth_personal_access_clients', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('client_id');
+            $table->timestamps();
+        });
+
+        // 3. Audit log table
+        $schema->create('omni_audit_logs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->string('event');
+            $table->text('metadata')->nullable();
+            $table->string('ip_address', 45)->nullable();
+            $table->string('user_agent')->nullable();
+            $table->string('client_app')->nullable();
+            $table->timestamp('occurred_at')->useCurrent();
+            $table->timestamps();
+        });
     }
 
     /**
