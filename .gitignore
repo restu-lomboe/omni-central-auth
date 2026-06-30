@@ -16,3 +16,4 @@ composer.lock
 *.swo
 .DS_Store
 Thumbs.db
+phpunit.xml.bak

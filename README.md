@@ -2,10 +2,9 @@
 
 **A plug-and-play SSO solution for Laravel — be the Identity Provider or connect as a client.**
 
-[![Latest Version](https://img.shields.io/packagist/v/developerawam/omni-central-auth.svg)](https://packagist.org/packages/developerawam/omni-central-auth)
-[![Tests](https://github.com/developerawam/omni-central-auth/actions/workflows/tests.yml/badge.svg)](https://github.com/developerawam/omni-central-auth/actions/workflows/tests.yml)
-[![Total Downloads](https://img.shields.io/packagist/dt/developerawam/omni-central-auth.svg)](https://packagist.org/packages/developerawam/omni-central-auth)
-[![License](https://img.shields.io/packagist/l/developerawam/omni-central-auth.svg)](LICENSE.md)
+[![Latest Version](https://img.shields.io/github/v/release/developerawam/omni-central-auth?filter=v*&sort=semver)](https://github.com/developerawam/omni-central-auth/releases)
+[![Tests](https://github.com/developerawam/omni-central-auth/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/developerawam/omni-central-auth/actions/workflows/tests.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
 [![Laravel Version](https://img.shields.io/badge/Laravel-13%2B-red)](https://laravel.com)
 
@@ -50,7 +49,7 @@ php artisan omni:install
 
 The installer will guide you through the following steps:
 
-1. **Choose a mode** — `server`, `client`, or `both`
+1. **Choose a mode** — `server` or `client`
 2. **Publish config** — `config/omni-central-auth.php`
 3. **Publish migrations** — copied to `database/migrations/`
 4. **Run migrations** — creates all required tables
@@ -360,9 +359,13 @@ See [`config/omni-central-auth.php`](config/omni-central-auth.php) for all avail
 
 ## Roadmap
 
-- [x] v1.0 — SSO Server + Client + Admin Dashboard
-- [x] v1.1 — Direct Push (encrypted payload, no code exchange)
-- [ ] v1.2 — Passkeys / WebAuthn support
+- [x] Beta — SSO Server + Client + Admin Dashboard
+- [x] Beta — Direct Push (encrypted payload, no code exchange)
+- [x] Beta — Popup login flow (postMessage)
+- [x] Beta — User profile dashboard with edit & avatar
+- [x] Beta — Role-based access (user / admin)
+- [ ] v1.0 — Stable release
+- [ ] v1.1 — Passkeys / WebAuthn support
 - [ ] v1.2 — Multi-tenancy / Organization
 - [ ] v2.0 — SAML 2.0 support
 
