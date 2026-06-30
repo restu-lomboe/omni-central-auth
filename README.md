@@ -2,8 +2,9 @@
 
 **A plug-and-play SSO solution for Laravel — be the Identity Provider or connect as a client.**
 
-[![Latest Version](https://img.shields.io/github/v/release/developerawam/omni-central-auth?filter=v*&sort=semver)](https://github.com/developerawam/omni-central-auth/releases)
-[![Tests](https://github.com/developerawam/omni-central-auth/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/developerawam/omni-central-auth/actions/workflows/tests.yml)
+[![Latest Version](https://img.shields.io/github/v/release/restu-lomboe/omni-central-auth?filter=v*&sort=semver)](https://github.com/restu-lomboe/omni-central-auth/releases)
+[![Tests](https://github.com/restu-lomboe/omni-central-auth/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/restu-lomboe/omni-central-auth/actions/workflows/tests.yml)
+[![Packagist](https://img.shields.io/packagist/v/developerawam/omni-central-auth)](https://packagist.org/packages/developerawam/omni-central-auth)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
 [![Laravel Version](https://img.shields.io/badge/Laravel-13%2B-red)](https://laravel.com)
@@ -54,8 +55,8 @@ The installer will guide you through the following steps:
 3. **Publish migrations** — copied to `database/migrations/`
 4. **Run migrations** — creates all required tables
 5. **Passport setup** _(server mode only)_ — generates encryption keys and creates:
-    - Personal Access Client
-    - SSO Client for client apps
+   - Personal Access Client
+   - SSO Client for client apps
 6. **Signing key generation** _(server mode only)_ — `OMNI_CENTRAL_SIGNING_KEY` auto-generated
 7. **`.env` updated** — `OMNI_AUTH_MODE` is set automatically
 
@@ -180,6 +181,7 @@ The package includes a ready-to-use SSO login button that opens a **popup window
 ```
 
 The popup flow:
+
 1. Clicking the button opens a centered popup to the SSO Server
 2. User logs in and authorizes in the popup
 3. On success, the popup closes automatically via `postMessage`
@@ -266,13 +268,13 @@ User logged in
 
 ### Benefits over Standard OAuth2
 
-| Aspect | Standard OAuth2 | Omni Direct Push |
-|--------|----------------|------------------|
-| Round-trips after redirect | 3 (exchange code → get token → fetch user) | 0 (data included in redirect) |
-| API endpoint required on server | `/api/user` | None (optional) |
-| Access token management | Required (token storage, refresh) | None |
-| Works without `/api/user` | No | Yes |
-| Security | OAuth2 state + authorization code | AES-256-CBC encrypted payload |
+| Aspect                          | Standard OAuth2                            | Omni Direct Push              |
+| ------------------------------- | ------------------------------------------ | ----------------------------- |
+| Round-trips after redirect      | 3 (exchange code → get token → fetch user) | 0 (data included in redirect) |
+| API endpoint required on server | `/api/user`                                | None (optional)               |
+| Access token management         | Required (token storage, refresh)          | None                          |
+| Works without `/api/user`       | No                                         | Yes                           |
+| Security                        | OAuth2 state + authorization code          | AES-256-CBC encrypted payload |
 
 ---
 
@@ -318,13 +320,13 @@ $userData = AuthorizationController::decryptPayload($ssoData, $signingKey);
 
 ### Security details
 
-| Aspect | Implementation |
-|--------|---------------|
-| Algorithm | AES-256-CBC |
-| Key derivation | SHA-256 of `OMNI_CENTRAL_SIGNING_KEY`, truncated to 32 bytes |
-| IV | Random 16 bytes per payload |
-| Transport | Base64-encoded URL parameter `?sso_data=...` |
-| Integrity | Decryption fails on any modification — tampered payload returns `null` |
+| Aspect         | Implementation                                                         |
+| -------------- | ---------------------------------------------------------------------- |
+| Algorithm      | AES-256-CBC                                                            |
+| Key derivation | SHA-256 of `OMNI_CENTRAL_SIGNING_KEY`, truncated to 32 bytes           |
+| IV             | Random 16 bytes per payload                                            |
+| Transport      | Base64-encoded URL parameter `?sso_data=...`                           |
+| Integrity      | Decryption fails on any modification — tampered payload returns `null` |
 
 > The signing key must be **identical** on both server and client. Use `php artisan omni:install` on the server to auto-generate it.
 
