@@ -7,7 +7,7 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/developerawam/omni-central-auth.svg)](https://packagist.org/packages/developerawam/omni-central-auth)
 [![License](https://img.shields.io/packagist/l/developerawam/omni-central-auth.svg)](LICENSE.md)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
-[![Laravel Version](https://img.shields.io/badge/Laravel-11%2B-red)](https://laravel.com)
+[![Laravel Version](https://img.shields.io/badge/Laravel-13%2B-red)](https://laravel.com)
 
 ---
 
@@ -27,7 +27,9 @@ Built on top of **Laravel Passport** (OAuth2), **Laravel Fortify** (Auth UI), an
 ## Requirements
 
 - PHP 8.2+
-- Laravel 11+
+- Laravel 13+
+- Livewire 4+
+- TailwindCSS v4+ (CDN via `@tailwindcss/browser`)
 - ext-sodium (required by Laravel Passport for JWT signing)
 
 > **Windows / XAMPP users:** Enable sodium in `php.ini` by uncommenting `;extension=sodium` → `extension=sodium`, then restart Apache.
