@@ -49,30 +49,35 @@ abstract class TestCase extends Orchestra
 
     protected function loadMigrationsForTests(): void
     {
-        // Users table minimal untuk testing
+        // Users table — contains ALL columns needed by tests
+        // (manually defined to avoid loading conflicting package migrations)
         $this->app['db']->connection()->getSchemaBuilder()->create('users', function ($table) {
             $table->id();
+            $table->string('omni_id')->nullable();
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password')->nullable();
-            $table->string('role')->default('user');
-            $table->boolean('is_admin')->default(false);
+            $table->string('avatar')->nullable();
             $table->text('two_factor_secret')->nullable();
             $table->text('two_factor_recovery_codes')->nullable();
-            $table->string('omni_id')->nullable();
+            $table->string('role')->default('user');
+            $table->boolean('is_admin')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });
 
-            // 2. Load Passport migrations (oauth_clients, oauth_tokens, dll)
+        // Load Passport migrations
         $this->loadMigrationsFrom(
             __DIR__ . '/../../vendor/laravel/passport/database/migrations'
         );
 
-        // 3. Load hanya audit_logs migration dari package
+        // Load audit log migration
         $this->loadMigrationsFrom(
             __DIR__ . '/../database/migrations/2024_01_01_000001_create_omni_audit_logs_table.php'
         );
+
+        // Run all pending migrations
+        $this->artisan('migrate', ['--force' => true]);
     }
 
     /**
