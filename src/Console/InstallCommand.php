@@ -13,7 +13,7 @@ class InstallCommand extends Command
     protected bool $adminCreated = false;
 
     protected $signature = 'omni:install
-                            {--mode= : Installation mode: server, client, or both}
+                            {--mode= : Installation mode: server or client}
                             {--force : Overwrite existing files}';
 
     protected $description = 'Install and setup Omni Central Auth package';
@@ -46,14 +46,13 @@ class InstallCommand extends Command
         match ($mode) {
             'server' => $this->setupServer(),
             'client' => $this->setupClient(),
-            'both'   => $this->setupServer() & $this->setupClient(),
         };
 
         // Set env
         $this->setEnvVariable('OMNI_AUTH_MODE', $mode);
 
         // Create admin user
-        if (in_array($mode, ['server', 'both'])) {
+        if ($mode === 'server') {
             $this->newLine();
             $this->createAdminUser();
         }
@@ -71,7 +70,6 @@ class InstallCommand extends Command
             [
                 'server' => 'server — This app is the SSO Server (Identity Provider)',
                 'client' => 'client — This app is a Client App (Service Provider)',
-                'both'   => 'both   — Both (for development)',
             ],
             'server'
         );
@@ -300,12 +298,12 @@ class InstallCommand extends Command
 
         $step = $this->adminCreated ? 1 : 2;
 
-        if (in_array($mode, ['server', 'both'])) {
+        if ($mode === 'server') {
             $this->line("  {$step}. Add <fg=cyan>HasApiTokens</> & <fg=cyan>TwoFactorAuthenticatable</> traits to User model");
             $this->line('  ' . ($step + 1) . '. Visit <fg=cyan>/omni-dashboard</> to manage OAuth Clients');
         }
 
-        if (in_array($mode, ['client', 'both'])) {
+        if ($mode === 'client') {
             $this->line("  {$step}. Fill in client credentials in <fg=cyan>.env</> (including OMNI_CENTRAL_SIGNING_KEY)");
             $this->line('  ' . ($step + 1) . '. Add login button: <fg=cyan>@include(\'omni::components.login-button\')</>');
         }
