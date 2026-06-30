@@ -3,7 +3,7 @@
 **A plug-and-play SSO solution for Laravel — be the Identity Provider or connect as a client.**
 
 [![Latest Version](https://img.shields.io/github/v/release/restu-lomboe/omni-central-auth?filter=v*&sort=semver)](https://github.com/restu-lomboe/omni-central-auth/releases)
-[![Tests](https://github.com/restu-lomboe/omni-central-auth/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/restu-lomboe/omni-central-auth/actions/workflows/tests.yml)
+[![Tests](https://github.com/restu-lomboe/omni-central-auth/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/restu-lomboe/omni-central-auth/actions/workflows/tests.yml)
 [![Packagist](https://img.shields.io/packagist/v/developerawam/omni-central-auth)](https://packagist.org/packages/developerawam/omni-central-auth)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
