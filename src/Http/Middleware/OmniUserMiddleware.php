@@ -19,8 +19,8 @@ class OmniUserMiddleware
         // Allow only if explicit role 'user'
         $isRegularUser = match (true) {
             method_exists($user, 'isOmniUser') => $user->isOmniUser(),
-            isset($user->role)                 => $user->role === 'user',
-            default                            => ! (isset($user->is_admin) && $user->is_admin),
+            isset($user->role) => $user->role === 'user',
+            default => ! (isset($user->is_admin) && $user->is_admin),
         };
 
         if (! $isRegularUser) {

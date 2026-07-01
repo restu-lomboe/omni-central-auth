@@ -4,8 +4,8 @@ namespace DeveloperAwam\OmniCentralAuth\Http\Controllers\Server;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
+use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 
 class UserProfileController extends Controller
 {

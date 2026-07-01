@@ -22,11 +22,11 @@ class OmniAdminMiddleware
             // Jika model punya method isOmniAdmin() — custom logic
             method_exists($user, 'isOmniAdmin') => $user->isOmniAdmin(),
             // Jika model punya kolom/attribute is_admin
-            isset($user->is_admin)              => (bool) $user->is_admin,
+            isset($user->is_admin) => (bool) $user->is_admin,
             // Jika model punya kolom role
-            isset($user->role)                  => in_array($user->role, ['admin', 'super_admin']),
+            isset($user->role) => in_array($user->role, ['admin', 'super_admin']),
             // Default: tolak akses
-            default                             => false,
+            default => false,
         };
 
         if (! $hasAdminAccess) {

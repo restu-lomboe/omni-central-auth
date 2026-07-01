@@ -1,5 +1,7 @@
 <?php
 
+use DeveloperAwam\OmniCentralAuth\Http\Middleware\OmniAdminMiddleware;
+use DeveloperAwam\OmniCentralAuth\OmniCentralAuthServiceProvider;
 use DeveloperAwam\OmniCentralAuth\Tests\TestCase;
 
 uses(TestCase::class);
@@ -15,7 +17,7 @@ it('registers middleware alias omni.admin', function () {
 
     expect($middleware)->toHaveKey('omni.admin');
     expect($middleware['omni.admin'])
-        ->toBe(\DeveloperAwam\OmniCentralAuth\Http\Middleware\OmniAdminMiddleware::class);
+        ->toBe(OmniAdminMiddleware::class);
 });
 
 it('registers dashboard routes when dashboard enabled', function () {
@@ -42,7 +44,7 @@ it('registers server routes in server mode', function () {
 it('throws exception for invalid mode', function () {
     config(['omni-central-auth.mode' => 'invalid']);
 
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
 
-    (new \DeveloperAwam\OmniCentralAuth\OmniCentralAuthServiceProvider(app()))->boot();
+    (new OmniCentralAuthServiceProvider(app()))->boot();
 });

@@ -75,7 +75,6 @@
                         <form method="POST" action="{{ route('omni.authorize.deny') }}" class="flex-1">
                             @csrf
                             @method('DELETE')
-                            <input type="hidden" name="auth_token" value="{{ $authToken }}">
                             <button type="submit"
                                 class="w-full px-4 py-2.5 border border-gray-300 text-gray-700 font-medium
                                            rounded-lg text-sm hover:bg-gray-50 transition-colors">
@@ -85,7 +84,6 @@
 
                         <form method="POST" action="{{ route('omni.authorize.approve') }}" class="flex-1">
                             @csrf
-                            <input type="hidden" name="auth_token" value="{{ $authToken }}">
                             <input type="hidden" name="client_id" value="{{ $client->getKey() }}">
                             <button type="submit"
                                 class="w-full px-4 py-2.5 bg-omni-500 hover:bg-omni-600 text-white font-medium

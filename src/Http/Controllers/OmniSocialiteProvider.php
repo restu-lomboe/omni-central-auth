@@ -38,11 +38,11 @@ class OmniSocialiteProvider extends AbstractProvider implements ProviderInterfac
 
     protected function mapUserToObject(array $user): User
     {
-        return (new User())->setRaw($user)->map([
-            'id'       => $user['id'],
-            'name'     => $user['name'],
-            'email'    => $user['email'],
-            'avatar'   => $user['avatar'] ?? null,
+        return (new User)->setRaw($user)->map([
+            'id' => $user['id'],
+            'name' => $user['name'],
+            'email' => $user['email'],
+            'avatar' => $user['avatar'] ?? null,
         ]);
     }
 }

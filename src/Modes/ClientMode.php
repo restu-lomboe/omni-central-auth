@@ -2,6 +2,7 @@
 
 namespace DeveloperAwam\OmniCentralAuth\Modes;
 
+use DeveloperAwam\OmniCentralAuth\Http\Controllers\OmniSocialiteProvider;
 use Laravel\Socialite\Contracts\Factory as SocialiteFactory;
 
 class ClientMode
@@ -20,13 +21,13 @@ class ClientMode
         // Register a custom OAuth2 driver that points to the SSO Server
         $socialite->extend('omni', function () use ($socialite) {
             $config = [
-                'client_id'     => config('omni-central-auth.client.client_id'),
+                'client_id' => config('omni-central-auth.client.client_id'),
                 'client_secret' => config('omni-central-auth.client.client_secret'),
-                'redirect'      => config('omni-central-auth.client.redirect_uri'),
+                'redirect' => config('omni-central-auth.client.redirect_uri'),
             ];
 
             return $socialite->buildProvider(
-                \DeveloperAwam\OmniCentralAuth\Http\Controllers\OmniSocialiteProvider::class,
+                OmniSocialiteProvider::class,
                 $config
             );
         });

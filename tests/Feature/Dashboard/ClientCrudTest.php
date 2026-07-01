@@ -1,18 +1,19 @@
 <?php
 
 use DeveloperAwam\OmniCentralAuth\Tests\TestCase;
+use Illuminate\Support\Str;
 use Laravel\Passport\Client;
 
 uses(TestCase::class);
 
 beforeEach(function () {
-    $this->admin   = $this->adminUser();
+    $this->admin = $this->adminUser();
 });
 
 it('admin can create a new oauth client', function () {
     $this->actingAs($this->admin)
         ->post(route('omni.dashboard.clients.store'), [
-            'name'     => 'Aplikasi HR',
+            'name' => 'Aplikasi HR',
             'redirect' => 'https://hr.example.com/omni/callback',
         ])
         ->assertRedirect(route('omni.dashboard.clients.index'));
@@ -32,7 +33,7 @@ it('create client validates required fields', function () {
 it('create client validates redirect must be a url', function () {
     $this->actingAs($this->admin)
         ->post(route('omni.dashboard.clients.store'), [
-            'name'     => 'Test App',
+            'name' => 'Test App',
             'redirect' => 'not-a-url',
         ])
         ->assertSessionHasErrors(['redirect']);
@@ -40,16 +41,16 @@ it('create client validates redirect must be a url', function () {
 
 it('admin can edit an oauth client', function () {
     $client = Client::create([
-        'name'          => 'Old Name',
+        'name' => 'Old Name',
         'redirect_uris' => json_encode(['https://old.example.com/callback']),
-        'grant_types'   => json_encode(['authorization_code', 'refresh_token']),
-        'secret'        => \Illuminate\Support\Str::random(40),
-        'revoked'       => false,
+        'grant_types' => json_encode(['authorization_code', 'refresh_token']),
+        'secret' => Str::random(40),
+        'revoked' => false,
     ]);
 
     $this->actingAs($this->admin)
         ->put(route('omni.dashboard.clients.update', $client->id), [
-            'name'     => 'New Name',
+            'name' => 'New Name',
             'redirect' => 'https://new.example.com/callback',
         ])
         ->assertRedirect(route('omni.dashboard.clients.index'));
@@ -61,11 +62,11 @@ it('admin can edit an oauth client', function () {
 
 it('admin can delete an oauth client', function () {
     $client = Client::create([
-        'name'          => 'Old Name',
+        'name' => 'Old Name',
         'redirect_uris' => json_encode(['https://old.example.com/callback']),
-        'grant_types'   => json_encode(['authorization_code', 'refresh_token']), // ← add this
-        'secret'        => \Illuminate\Support\Str::random(40),
-        'revoked'       => false,
+        'grant_types' => json_encode(['authorization_code', 'refresh_token']), // ← add this
+        'secret' => Str::random(40),
+        'revoked' => false,
     ]);
 
     $this->actingAs($this->admin)

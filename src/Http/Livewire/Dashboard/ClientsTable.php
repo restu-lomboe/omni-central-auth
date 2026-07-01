@@ -11,6 +11,7 @@ class ClientsTable extends Component
     use WithPagination;
 
     public string $search = '';
+
     public bool $showSecret = false;
 
     protected $clients;

@@ -10,23 +10,23 @@ use Laravel\Passport\TokenRepository;
 class AuthorizationController extends Controller
 {
     public function __construct(
-        protected TokenRepository  $tokens,
+        protected TokenRepository $tokens,
     ) {}
 
     public function show(Request $request)
     {
         $clientId = $request->get('client_id');
-        $client   = Client::find($clientId);
+        $client = Client::find($clientId);
 
         if (! $client) {
             abort(400, 'OAuth client not found or inactive.');
         }
 
         return view('omni::server.authorize', [
-            'client'   => $client,
-            'user'     => $request->user(),
-            'scopes'   => $request->get('scope', '*'),
-            'request'  => $request,
+            'client' => $client,
+            'user' => $request->user(),
+            'scopes' => $request->get('scope', '*'),
+            'request' => $request,
         ]);
     }
 
@@ -47,10 +47,10 @@ class AuthorizationController extends Controller
         }
 
         $payload = $this->encryptPayload([
-            'omni_id'   => $user->getAuthIdentifier(),
-            'name'      => $user->name,
-            'email'     => $user->email,
-            'avatar'    => $user->avatar ?? null,
+            'omni_id' => $user->getAuthIdentifier(),
+            'name' => $user->name,
+            'email' => $user->email,
+            'avatar' => $user->avatar ?? null,
             'timestamp' => now()->timestamp,
         ], $signingKey);
 
@@ -74,8 +74,8 @@ class AuthorizationController extends Controller
         $redirectUri = $redirects[0] ?? '';
 
         return view('omni::server.approved', [
-            'sso_data'       => $payload,
-            'callback_url'   => $redirectUri,
+            'sso_data' => $payload,
+            'callback_url' => $redirectUri,
         ]);
     }
 
@@ -91,10 +91,14 @@ class AuthorizationController extends Controller
         $iv = random_bytes(16);
 
         $encrypted = openssl_encrypt(
-            $json, 'aes-256-cbc', $encryptionKey, OPENSSL_RAW_DATA, $iv
+            $json,
+            'aes-256-cbc',
+            $encryptionKey,
+            OPENSSL_RAW_DATA,
+            $iv
         );
 
-        return base64_encode($iv . $encrypted);
+        return base64_encode($iv.$encrypted);
     }
 
     public static function decryptPayload(string $payload, string $key): ?array
@@ -110,7 +114,11 @@ class AuthorizationController extends Controller
         $encrypted = substr($decoded, 16);
 
         $decrypted = openssl_decrypt(
-            $encrypted, 'aes-256-cbc', $encryptionKey, OPENSSL_RAW_DATA, $iv
+            $encrypted,
+            'aes-256-cbc',
+            $encryptionKey,
+            OPENSSL_RAW_DATA,
+            $iv
         );
 
         if ($decrypted === false) {

@@ -2,6 +2,7 @@
 
 namespace DeveloperAwam\OmniCentralAuth\Actions;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
@@ -11,7 +12,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
     public function update(mixed $user, array $input): void
     {
         $rules = [
-            'name'  => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
         ];
 
@@ -27,7 +28,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
         Validator::make($input, $rules)->validate();
 
         // Handle avatar upload
-        if (isset($input['avatar']) && $input['avatar'] instanceof \Illuminate\Http\UploadedFile) {
+        if (isset($input['avatar']) && $input['avatar'] instanceof UploadedFile) {
             // Delete old avatar
             if ($user->avatar) {
                 Storage::disk('public')->delete($user->avatar);
@@ -38,7 +39,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
         }
 
         $user->forceFill([
-            'name'  => $input['name'],
+            'name' => $input['name'],
             'email' => $input['email'],
         ])->save();
     }

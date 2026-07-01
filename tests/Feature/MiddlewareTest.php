@@ -1,13 +1,15 @@
 <?php
 
-use DeveloperAwam\OmniCentralAuth\Tests\TestCase;
 use DeveloperAwam\OmniCentralAuth\Http\Middleware\OmniAdminMiddleware;
+use DeveloperAwam\OmniCentralAuth\Tests\TestCase;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 uses(TestCase::class);
 
-function runMiddleware($user = null): \Symfony\Component\HttpFoundation\Response
+function runMiddleware($user = null): Symfony\Component\HttpFoundation\Response
 {
     $request = Request::create('/test');
 
@@ -16,7 +18,7 @@ function runMiddleware($user = null): \Symfony\Component\HttpFoundation\Response
         auth()->setUser($user);
     }
 
-    $middleware = new OmniAdminMiddleware();
+    $middleware = new OmniAdminMiddleware;
 
     return $middleware->handle($request, fn () => new Response('OK'));
 }
@@ -38,17 +40,19 @@ it('allows user with isOmniAdmin() returning true', function () {
 it('blocks user with isOmniAdmin() returning false', function () {
     $user = $this->regularUser();
 
-    expect(fn () => runMiddleware($user))->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+    expect(fn () => runMiddleware($user))->toThrow(HttpException::class);
 });
 
 it('allows user with is_admin = true when no isOmniAdmin method', function () {
     // Anonymous class tanpa method isOmniAdmin
-    $user = new class extends \Illuminate\Foundation\Auth\User {
+    $user = new class extends User
+    {
         public $id = 1;
+
         public $is_admin = true;
     };
 
-    $middleware = new OmniAdminMiddleware();
+    $middleware = new OmniAdminMiddleware;
     $request = Request::create('/test');
     $request->setUserResolver(fn () => $user);
 
@@ -57,12 +61,14 @@ it('allows user with is_admin = true when no isOmniAdmin method', function () {
 });
 
 it('allows user with role = admin when no isOmniAdmin method and no is_admin', function () {
-    $user = new class extends \Illuminate\Foundation\Auth\User {
+    $user = new class extends User
+    {
         public $id = 1;
+
         public $role = 'admin';
     };
 
-    $middleware = new OmniAdminMiddleware();
+    $middleware = new OmniAdminMiddleware;
     $request = Request::create('/test');
     $request->setUserResolver(fn () => $user);
 

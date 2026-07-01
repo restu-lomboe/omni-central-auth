@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+
 return [
 
     /*
@@ -51,7 +53,7 @@ return [
         'server_url' => env('OMNI_CLIENT_SERVER_URL', 'http://localhost:8000'),
 
         // OAuth2 Client Credentials (didapat dari Admin Dashboard IdP)
-        'client_id'     => env('OMNI_CLIENT_ID'),
+        'client_id' => env('OMNI_CLIENT_ID'),
         'client_secret' => env('OMNI_CLIENT_SECRET'),
 
         // Redirect URI setelah user authorize di SSO Server
@@ -87,8 +89,8 @@ return [
 
         // Fitur yang ditampilkan
         'features' => [
-            'clients'   => true,  // Manage OAuth Clients
-            'users'     => true,  // Manage Users & Roles
+            'clients' => true,  // Manage OAuth Clients
+            'users' => true,  // Manage Users & Roles
             'audit_log' => true,  // Audit Log
         ],
     ],
@@ -101,7 +103,7 @@ return [
     'load_migrations' => true,
 
     // Model User yang dipakai (bisa di-override)
-    'user_model' => env('OMNI_USER_MODEL', \App\Models\User::class),
+    'user_model' => env('OMNI_USER_MODEL', User::class),
 
     /*
     |--------------------------------------------------------------------------
@@ -114,11 +116,11 @@ return [
 
         // Event yang dicatat
         'events' => [
-            'login'          => true,
-            'logout'         => true,
-            'login_failed'   => true,
-            'token_issued'   => true,
-            'token_revoked'  => true,
+            'login' => true,
+            'logout' => true,
+            'login_failed' => true,
+            'token_issued' => true,
+            'token_revoked' => true,
             '2fa_challenged' => true,
         ],
     ],

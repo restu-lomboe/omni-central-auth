@@ -2,12 +2,13 @@
 
 namespace DeveloperAwam\OmniCentralAuth\Tests;
 
-use Illuminate\Database\Schema\Blueprint;
-use Orchestra\Testbench\TestCase as Orchestra;
 use DeveloperAwam\OmniCentralAuth\OmniCentralAuthServiceProvider;
-use Laravel\Passport\PassportServiceProvider;
+use DeveloperAwam\OmniCentralAuth\Tests\Fixtures\User;
+use Illuminate\Database\Schema\Blueprint;
 use Laravel\Fortify\FortifyServiceProvider;
+use Laravel\Passport\PassportServiceProvider;
 use Livewire\LivewireServiceProvider;
+use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
 {
@@ -33,19 +34,27 @@ abstract class TestCase extends Orchestra
         // Database in-memory untuk testing
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', [
-            'driver'   => 'sqlite',
+            'driver' => 'sqlite',
             'database' => ':memory:',
-            'prefix'   => '',
+            'prefix' => '',
         ]);
 
         // Auth config
         $app['config']->set('auth.guards.api.driver', 'passport');
-        $app['config']->set('auth.providers.users.model', \DeveloperAwam\OmniCentralAuth\Tests\Fixtures\User::class);
+        $app['config']->set('auth.providers.users.model', User::class);
 
         // Package config
         $app['config']->set('omni-central-auth.mode', 'server');
-        $app['config']->set('omni-central-auth.user_model', \DeveloperAwam\OmniCentralAuth\Tests\Fixtures\User::class);
+        $app['config']->set('omni-central-auth.user_model', User::class);
         $app['config']->set('omni-central-auth.dashboard.enabled', true);
+
+        // Filesystem config for avatar uploads
+        $app['config']->set('filesystems.disks.public', [
+            'driver' => 'local',
+            'root' => storage_path('app/public'),
+            'url' => '/storage',
+            'visibility' => 'public',
+        ]);
     }
 
     protected function loadMigrationsForTests(): void
@@ -131,28 +140,28 @@ abstract class TestCase extends Orchestra
     /**
      * Buat admin user untuk testing dashboard.
      */
-    protected function adminUser(): \DeveloperAwam\OmniCentralAuth\Tests\Fixtures\User
+    protected function adminUser(array $overrides = []): User
     {
-        return \DeveloperAwam\OmniCentralAuth\Tests\Fixtures\User::create([
-            'name'     => 'Admin Test',
-            'email'    => 'admin@test.com',
+        return User::create(array_merge([
+            'name' => 'Admin Test',
+            'email' => 'admin@test.com',
             'password' => bcrypt('password'),
-            'role'     => 'admin',
+            'role' => 'admin',
             'is_admin' => true,
-        ]);
+        ], $overrides));
     }
 
     /**
      * Buat regular user untuk testing.
      */
-    protected function regularUser(): \DeveloperAwam\OmniCentralAuth\Tests\Fixtures\User
+    protected function regularUser(array $overrides = []): User
     {
-        return \DeveloperAwam\OmniCentralAuth\Tests\Fixtures\User::create([
-            'name'     => 'Regular User',
-            'email'    => 'user@test.com',
+        return User::create(array_merge([
+            'name' => 'Regular User',
+            'email' => 'user@test.com',
             'password' => bcrypt('password'),
-            'role'     => 'user',
+            'role' => 'user',
             'is_admin' => false,
-        ]);
+        ], $overrides));
     }
 }

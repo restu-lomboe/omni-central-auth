@@ -2,10 +2,10 @@
 
 namespace DeveloperAwam\OmniCentralAuth\Http\Controllers\Client;
 
+use DeveloperAwam\OmniCentralAuth\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Laravel\Socialite\Facades\Socialite;
-use DeveloperAwam\OmniCentralAuth\Models\AuditLog;
 
 class LoginController extends Controller
 {

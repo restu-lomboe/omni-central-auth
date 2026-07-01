@@ -78,7 +78,7 @@ class InstallCommand extends Command
     protected function publishConfig(): void
     {
         $this->callSilently('vendor:publish', [
-            '--tag'   => 'omni-config',
+            '--tag' => 'omni-config',
             '--force' => $this->option('force'),
         ]);
         $this->line('  <fg=green>✔</> Config published to <fg=cyan>config/omni-central-auth.php</>');
@@ -88,7 +88,7 @@ class InstallCommand extends Command
     {
         // Check if any omni migration already exists
         $existing = glob(database_path('migrations/*_create_omni_audit_logs_table.php'));
-        
+
         if (! empty($existing)) {
             $this->line('  <fg=green>✔</> Migrations already exist — skipped');
 
@@ -104,7 +104,7 @@ class InstallCommand extends Command
     protected function publishViews(): void
     {
         $this->callSilently('vendor:publish', [
-            '--tag'   => 'omni-views',
+            '--tag' => 'omni-views',
             '--force' => $this->option('force'),
         ]);
         $this->line('  <fg=green>✔</> Views published to <fg=cyan>resources/views/vendor/omni/</>');
@@ -134,7 +134,7 @@ class InstallCommand extends Command
 
         // Create personal access client (skip if already exists)
         if ($this->confirm('Create a personal access client?', false)) {
-            $this->call('passport:client', ['--personal' => true, '--name' => config('app.name') . ' Personal Access']);
+            $this->call('passport:client', ['--personal' => true, '--name' => config('app.name').' Personal Access']);
         }
 
         // Generate SSO signing key
@@ -144,12 +144,12 @@ class InstallCommand extends Command
         $this->line('  <fg=green>✔</> Passport keys & config ready');
         $this->newLine();
         $this->line('  <fg=green>✔ SSO Signing Key generated!</>');
-        $this->line('     <fg=cyan>' . $signingKey . '</>');
+        $this->line('     <fg=cyan>'.$signingKey.'</>');
         $this->line('  (auto-saved to .env as OMNI_CENTRAL_SIGNING_KEY)');
 
         // Create default OAuth client for SSO
         if ($this->confirm('Create an OAuth client for SSO client apps?', true)) {
-            $name = $this->ask('OAuth client name', config('app.name') . ' SSO Client');
+            $name = $this->ask('OAuth client name', config('app.name').' SSO Client');
             $redirect = $this->ask('Redirect URI', 'http://localhost:8000/omni/callback');
 
             $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient(
@@ -160,14 +160,14 @@ class InstallCommand extends Command
 
             $this->newLine();
             $this->line('  <fg=green>✔ OAuth client created!</>');
-            $this->line('     Client ID    : <fg=cyan>' . $client->getKey() . '</>');
-            $this->line('     Client Secret: <fg=cyan>' . ($client->plainSecret ?? 'hidden') . '</>');
+            $this->line('     Client ID    : <fg=cyan>'.$client->getKey().'</>');
+            $this->line('     Client Secret: <fg=cyan>'.($client->plainSecret ?? 'hidden').'</>');
             $this->line('');
             $this->line('  Add these to your client app\'s <fg=cyan>.env</>:');
-            $this->line('       OMNI_CLIENT_ID=' . $client->getKey());
+            $this->line('       OMNI_CLIENT_ID='.$client->getKey());
             $this->line("       OMNI_CLIENT_SECRET={$client->plainSecret}");
-            $this->line('       OMNI_CLIENT_REDIRECT_URI=' . $redirect);
-            $this->line('       OMNI_CENTRAL_SIGNING_KEY=' . $signingKey);
+            $this->line('       OMNI_CLIENT_REDIRECT_URI='.$redirect);
+            $this->line('       OMNI_CENTRAL_SIGNING_KEY='.$signingKey);
         }
 
     }
@@ -194,7 +194,7 @@ class InstallCommand extends Command
 
         $content = file_get_contents($path);
 
-        if (str_contains($content, $key . '=')) {
+        if (str_contains($content, $key.'=')) {
             $content = preg_replace("/^{$key}=.*/m", "{$key}={$value}", $content);
         } else {
             $content .= "\n{$key}={$value}\n";
@@ -251,12 +251,12 @@ class InstallCommand extends Command
         $password = $this->secret('Password (min. 8 characters)');
 
         $validator = Validator::make([
-            'name'     => $name,
-            'email'    => $email,
+            'name' => $name,
+            'email' => $email,
             'password' => $password,
         ], [
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8'],
         ]);
 
@@ -269,10 +269,10 @@ class InstallCommand extends Command
         }
 
         $user = $userModel::create([
-            'name'     => $name,
-            'email'    => $email,
+            'name' => $name,
+            'email' => $email,
             'password' => Hash::make($password),
-            'role'     => 'admin',
+            'role' => 'admin',
             'is_admin' => true,
         ]);
 
@@ -280,7 +280,7 @@ class InstallCommand extends Command
 
         $this->newLine();
         $this->line('  <fg=green>✔ Admin user created successfully!</>');
-        $this->line('     Email: <fg=cyan>' . $user->email . '</>');
+        $this->line('     Email: <fg=cyan>'.$user->email.'</>');
         $this->line('     Role : <fg=cyan>admin</>');
         $this->line('');
         $this->line('  You can now log in at <fg=cyan>/login</>');
@@ -300,12 +300,12 @@ class InstallCommand extends Command
 
         if ($mode === 'server') {
             $this->line("  {$step}. Add <fg=cyan>HasApiTokens</> & <fg=cyan>TwoFactorAuthenticatable</> traits to User model");
-            $this->line('  ' . ($step + 1) . '. Visit <fg=cyan>/omni-dashboard</> to manage OAuth Clients');
+            $this->line('  '.($step + 1).'. Visit <fg=cyan>/omni-dashboard</> to manage OAuth Clients');
         }
 
         if ($mode === 'client') {
             $this->line("  {$step}. Fill in client credentials in <fg=cyan>.env</> (including OMNI_CENTRAL_SIGNING_KEY)");
-            $this->line('  ' . ($step + 1) . '. Add login button: <fg=cyan>@include(\'omni::components.login-button\')</>');
+            $this->line('  '.($step + 1).'. Add login button: <fg=cyan>@include(\'omni::components.login-button\')</>');
         }
 
         $this->newLine();

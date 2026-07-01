@@ -24,8 +24,8 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'         => ['required', 'string', 'max:255'],
-            'redirect'     => ['required', 'url'],
+            'name' => ['required', 'string', 'max:255'],
+            'redirect' => ['required', 'url'],
         ]);
 
         $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient(
@@ -51,7 +51,7 @@ class ClientController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'redirect' => ['required', 'url'],
         ]);
 
@@ -59,7 +59,7 @@ class ClientController extends Controller
         abort_if(! $client, 404);
 
         $client->update([
-            'name'          => $request->name,
+            'name' => $request->name,
             'redirect_uris' => [$request->redirect],
         ]);
 

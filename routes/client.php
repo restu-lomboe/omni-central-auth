@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use DeveloperAwam\OmniCentralAuth\Http\Controllers\Client\LoginController;
 use DeveloperAwam\OmniCentralAuth\Http\Controllers\Client\CallbackController;
+use DeveloperAwam\OmniCentralAuth\Http\Controllers\Client\LoginController;
+use Illuminate\Support\Facades\Route;
 
 Route::group([
     'middleware' => ['web'],
-    'prefix'     => 'omni',
+    'prefix' => 'omni',
 ], function () {
     // Redirect user to the SSO Server for login
     Route::get('/login', [LoginController::class, 'redirect'])->name('omni.login');

@@ -12,11 +12,11 @@ class DashboardController extends Controller
     {
         $stats = [
             'total_clients' => Client::where('revoked', false)->count(),
-            'total_users'   => config('omni-central-auth.user_model')::count(),
-            'logins_today'  => AuditLog::where('event', 'login')
+            'total_users' => config('omni-central-auth.user_model')::count(),
+            'logins_today' => AuditLog::where('event', 'login')
                 ->whereDate('occurred_at', today())
                 ->count(),
-            'failed_today'  => AuditLog::where('event', 'login_failed')
+            'failed_today' => AuditLog::where('event', 'login_failed')
                 ->whereDate('occurred_at', today())
                 ->count(),
         ];

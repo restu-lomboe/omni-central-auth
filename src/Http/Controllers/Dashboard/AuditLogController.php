@@ -2,9 +2,9 @@
 
 namespace DeveloperAwam\OmniCentralAuth\Http\Controllers\Dashboard;
 
+use DeveloperAwam\OmniCentralAuth\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use DeveloperAwam\OmniCentralAuth\Models\AuditLog;
 
 class AuditLogController extends Controller
 {
@@ -14,7 +14,7 @@ class AuditLogController extends Controller
             ->when($request->event, fn ($q) => $q->where('event', $request->event))
             ->when($request->search, fn ($q) => $q->whereHas('user', function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('email', 'like', "%{$request->search}%");
+                    ->orWhere('email', 'like', "%{$request->search}%");
             }))
             ->orderByDesc('occurred_at')
             ->paginate(50);

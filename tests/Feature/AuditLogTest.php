@@ -1,7 +1,7 @@
 <?php
 
-use DeveloperAwam\OmniCentralAuth\Tests\TestCase;
 use DeveloperAwam\OmniCentralAuth\Models\AuditLog;
+use DeveloperAwam\OmniCentralAuth\Tests\TestCase;
 
 uses(TestCase::class);
 
@@ -32,13 +32,13 @@ it('prunes old logs based on retention policy', function () {
 
     // Log lama (> 30 hari)
     AuditLog::create([
-        'event'       => 'login',
+        'event' => 'login',
         'occurred_at' => now()->subDays(60),
     ]);
 
     // Log baru (< 30 hari)
     AuditLog::create([
-        'event'       => 'login',
+        'event' => 'login',
         'occurred_at' => now()->subDays(10),
     ]);
 

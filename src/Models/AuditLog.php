@@ -20,7 +20,7 @@ class AuditLog extends Model
     ];
 
     protected $casts = [
-        'metadata'    => 'array',
+        'metadata' => 'array',
         'occurred_at' => 'datetime',
     ];
 
@@ -35,12 +35,12 @@ class AuditLog extends Model
     public static function record(string $event, array $metadata = []): static
     {
         return static::create([
-            'user_id'    => auth()->id(),
-            'event'      => $event,
+            'user_id' => auth()->id(),
+            'event' => $event,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
             'client_app' => request()->header('X-Client-App'),
-            'metadata'   => $metadata,
+            'metadata' => $metadata,
             'occurred_at' => now(),
         ]);
     }

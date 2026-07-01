@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use DeveloperAwam\OmniCentralAuth\Http\Controllers\Server\AuthorizationController;
 use DeveloperAwam\OmniCentralAuth\Http\Controllers\Server\UserProfileController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 // All OAuth2 routes are handled by Laravel Passport automatically:
 // POST /oauth/token
@@ -18,9 +18,9 @@ Route::middleware('auth:api')->get('/api/user', function (Request $request) {
     $user = $request->user();
 
     return [
-        'id'     => $user->getAuthIdentifier(),
-        'name'   => $user->name,
-        'email'  => $user->email,
+        'id' => $user->getAuthIdentifier(),
+        'name' => $user->name,
+        'email' => $user->email,
         'avatar' => $user->avatar ?? null,
     ];
 });
@@ -38,7 +38,7 @@ Route::middleware(['web', 'auth', 'omni.user'])->group(function () {
 // Additional Omni routes (optional, e.g. custom consent page)
 Route::group([
     'middleware' => config('omni-central-auth.server.middleware', ['web']),
-    'prefix'     => 'omni',
+    'prefix' => 'omni',
 ], function () {
     // Custom OAuth consent page (overrides Passport default)
     Route::get('/authorize', [AuthorizationController::class, 'show'])->name('omni.authorize');

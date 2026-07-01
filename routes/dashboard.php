@@ -1,18 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use DeveloperAwam\OmniCentralAuth\Http\Controllers\Dashboard\DashboardController;
-use DeveloperAwam\OmniCentralAuth\Http\Controllers\Dashboard\ClientController;
-use DeveloperAwam\OmniCentralAuth\Http\Controllers\Dashboard\UserController;
 use DeveloperAwam\OmniCentralAuth\Http\Controllers\Dashboard\AuditLogController;
+use DeveloperAwam\OmniCentralAuth\Http\Controllers\Dashboard\ClientController;
+use DeveloperAwam\OmniCentralAuth\Http\Controllers\Dashboard\DashboardController;
+use DeveloperAwam\OmniCentralAuth\Http\Controllers\Dashboard\UserController;
+use Illuminate\Support\Facades\Route;
 
-$prefix     = config('omni-central-auth.dashboard.prefix', 'omni-dashboard');
+$prefix = config('omni-central-auth.dashboard.prefix', 'omni-dashboard');
 $middleware = config('omni-central-auth.dashboard.middleware', ['web', 'auth', 'omni.admin']);
 
 Route::group([
-    'prefix'     => $prefix,
+    'prefix' => $prefix,
     'middleware' => $middleware,
-    'as'         => 'omni.dashboard.',
+    'as' => 'omni.dashboard.',
 ], function () {
 
     // Overview

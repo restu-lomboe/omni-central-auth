@@ -11,8 +11,8 @@ class CreateNewUser implements CreatesNewUsers
     public function create(array $input): mixed
     {
         Validator::make($input, [
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ])->validate();
 
@@ -21,10 +21,10 @@ class CreateNewUser implements CreatesNewUsers
         $isFirstUser = $userModel::count() === 0;
 
         return $userModel::create([
-            'name'     => $input['name'],
-            'email'    => $input['email'],
+            'name' => $input['name'],
+            'email' => $input['email'],
             'password' => Hash::make($input['password']),
-            'role'     => $isFirstUser ? 'admin' : 'user',
+            'role' => $isFirstUser ? 'admin' : 'user',
             'is_admin' => $isFirstUser,
         ]);
     }
