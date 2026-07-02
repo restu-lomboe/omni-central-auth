@@ -11,6 +11,8 @@
 
 ---
 
+## ![Omni Central Auth](omni_central_auth.svg)
+
 ## About
 
 `omni-central-auth` is a Laravel package that lets you build your own **Single Sign-On (SSO)** system — either as:
