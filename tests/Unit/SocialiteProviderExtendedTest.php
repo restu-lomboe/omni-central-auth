@@ -2,7 +2,6 @@
 
 use DeveloperAwam\OmniCentralAuth\Http\Controllers\OmniSocialiteProvider;
 use DeveloperAwam\OmniCentralAuth\Tests\TestCase;
-use GuzzleHttp\Client as HttpClient;
 use Illuminate\Http\Request;
 
 uses(TestCase::class);

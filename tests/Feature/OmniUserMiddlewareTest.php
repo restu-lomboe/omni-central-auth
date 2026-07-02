@@ -47,6 +47,7 @@ it('allows user with isOmniUser() returning true', function () {
     $user = new class extends User
     {
         public $id = 1;
+
         public $role = 'user';
 
         public function isOmniUser(): bool
@@ -67,6 +68,7 @@ it('blocks user with isOmniUser() returning false', function () {
     $user = new class extends User
     {
         public $id = 1;
+
         public $role = 'admin';
 
         public function isOmniUser(): bool
@@ -87,6 +89,7 @@ it('allows user when role is not set and is_admin is false', function () {
     $user = new class extends User
     {
         public $id = 1;
+
         public $is_admin = false;
     };
 
@@ -102,6 +105,7 @@ it('blocks user when role is not set and is_admin is true', function () {
     $user = new class extends User
     {
         public $id = 1;
+
         public $is_admin = true;
     };
 

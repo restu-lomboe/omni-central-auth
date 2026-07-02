@@ -2,6 +2,9 @@
 
 namespace DeveloperAwam\OmniCentralAuth\Tests;
 
+use DeveloperAwam\OmniCentralAuth\OmniCentralAuthServiceProvider;
+use Laravel\Fortify\FortifyServiceProvider;
+use Laravel\Socialite\SocialiteServiceProvider;
 use Livewire\LivewireServiceProvider;
 
 abstract class ClientTestCase extends TestCase
@@ -9,10 +12,10 @@ abstract class ClientTestCase extends TestCase
     protected function getPackageProviders($app): array
     {
         return [
-            \Laravel\Fortify\FortifyServiceProvider::class,
-            \Laravel\Socialite\SocialiteServiceProvider::class,
+            FortifyServiceProvider::class,
+            SocialiteServiceProvider::class,
             LivewireServiceProvider::class,
-            \DeveloperAwam\OmniCentralAuth\OmniCentralAuthServiceProvider::class,
+            OmniCentralAuthServiceProvider::class,
         ];
     }
 

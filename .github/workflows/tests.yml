@@ -73,7 +73,7 @@ jobs:
         run: composer install --prefer-dist --no-interaction
 
       - name: Generate coverage
-        run: vendor/bin/pest --coverage --min=75
+        run: vendor/bin/pest --coverage --min=80
 
   lint:
     runs-on: ubuntu-latest

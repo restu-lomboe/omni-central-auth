@@ -1,6 +1,5 @@
 <?php
 
-use DeveloperAwam\OmniCentralAuth\Http\Controllers\Server\AuthorizationController;
 use DeveloperAwam\OmniCentralAuth\Tests\TestCase;
 use Illuminate\Support\Str;
 use Laravel\Passport\Client;
